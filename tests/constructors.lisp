@@ -89,8 +89,8 @@
     (setf (ct:tref bits 1) #x3f80)
     (is (= #x3f80 (ct:tref (ct:copy-tensor bits) 1)))
     (signals error (setf (ct:tref bits 0) 1f0)))
-  (is (string= "#<TENSOR :F32 NIL>" (princ-to-string (ct:zeros nil))))
-  (is (string= "#<TENSOR :F32 (0 3)>" (princ-to-string (ct:zeros '(0 3)))))
+  (is (string-equal "#<TENSOR :F32 NIL>" (princ-to-string (ct:zeros nil))))
+  (is (string-equal "#<TENSOR :F32 (0 3)>" (princ-to-string (ct:zeros '(0 3)))))
   (is (= 1 (ct:tref (ct:copy-tensor (ct:ones nil))))))
 
 (test foreign-access-and-copy

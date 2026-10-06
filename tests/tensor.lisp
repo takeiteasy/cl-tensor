@@ -76,5 +76,5 @@
     (is (ct:contiguous-p tensor))))
 
 (test print-object
-  (is (string= "#<TENSOR :F32 (2 3)>"
+  (is (string-equal "#<TENSOR :F32 (2 3)>"
                (princ-to-string (ct:make-tensor '(2 3))))))
