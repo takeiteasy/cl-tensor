@@ -1,0 +1,37 @@
+# API
+
+Package `cl-tensor`, nickname it locally (`ct` below). Everything listed here exists today; see [limitations](limitations.md) for what does not.
+
+## Construction
+
+| Function | Returns |
+|---|---|
+| `(make-tensor shape &key (dtype :f32))` | Zeroed contiguous tensor |
+| `(make-tensor-view storage shape &key dtype strides offset)` | Tensor sharing `storage`; signals an error if the view is invalid |
+| `(row-major-strides shape)` | Row-major strides for `shape` |
+
+`shape` is a list or vector of non-negative integers. `dtype` defaults to the dtype inferred from `storage`.
+
+```lisp
+(ct:make-tensor '(2 3) :dtype :f64)
+;; => #<TENSOR :F64 (2 3)>
+```
+
+## Inspection
+
+| Function | Returns |
+|---|---|
+| `tensor-storage` `tensor-dtype` `tensor-shape` `tensor-strides` `tensor-offset` | The slots |
+| `tensor-rank` `tensor-size` | Number of axes, number of elements |
+| `(tensor-index tensor indices)` | Storage index of the element at the index list; signals an error when out of bounds |
+| `contiguous-p` `inner-contiguous-p` | Layout predicates, see [dtypes and strides](dtypes-and-strides.md) |
+| `tensorp` | Type predicate |
+
+## Dtypes
+
+| Function | Returns |
+|---|---|
+| `*dtypes*` | Table of supported dtypes |
+| `(storage-dtype storage)` | Dtype inferred from storage |
+| `(dtype-element-type dtype)` `(dtype-bytes dtype)` | Lisp element type, size in bytes |
+| `(dtype-storage-only-p dtype)` | True for `:f16` and `:bf16` |
