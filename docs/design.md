@@ -50,7 +50,7 @@ See [matrix multiplication](matmul.md) for shapes, dtypes and output behavior.
 
 ## Operation execution
 
-Elementwise operations compute the broadcast shape, validate dtypes and output layout, snapshot aliased inputs, then dispatch contiguous tensors or inner rows to trivial-simd. Inputs support arbitrary strides. Out-forms reject layouts in which two logical elements share a storage location.
+Elementwise operations compute the broadcast shape and validate tensor dtypes, then pass storage, offsets and broadcast strides to one trivial-simd N-D operation. Upstream validates output uniqueness and snapshots aliased inputs before execution. Compatible contiguous axes coalesce into bulk runs; native-supported operations traverse arbitrary layouts in C. Other cases traverse storage directly in Lisp. Inputs support arbitrary strides. Out-forms reject layouts in which two logical elements share a storage location.
 
 Lisp storage uses array access. Foreign storage uses typed CFFI access and remains owned by the caller; its memory must stay valid for the entire operation.
 

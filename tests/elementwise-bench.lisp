@@ -1,0 +1,33 @@
+(require :asdf)
+(asdf:load-system :cl-tensor)
+
+(let ((baseline (uiop:getenv "CT_ELEMENTWISE_BASELINE")))
+  (when baseline (load baseline)))
+
+(defun measure-elementwise (name input out iterations)
+  (let ((right (cl-tensor:full (coerce (cl-tensor:tensor-shape out) 'list) 2)))
+    (dotimes (index 20) (cl-tensor:add! out input right))
+    #+sbcl (sb-ext:gc :full t)
+    (let ((start (get-internal-real-time))
+          #+sbcl (bytes (sb-ext:get-bytes-consed)))
+      (dotimes (index iterations) (cl-tensor:add! out input right))
+      (format t "~A: ~,3F us/call~A~%" name
+              (* 1d6 (/ (- (get-internal-real-time) start) internal-time-units-per-second iterations))
+              #+sbcl (format nil ", ~,1F bytes/call" (/ (- (sb-ext:get-bytes-consed) bytes) iterations))
+              #-sbcl ""))))
+
+(format t "~&~A ~A, backend ~A~%" (lisp-implementation-type) (lisp-implementation-version)
+        (trivial-simd:backend))
+(dolist (side '(32 256))
+  (let* ((storage (cl-tensor:tensor-storage (cl-tensor:full (list (* side side 2)) 3)))
+         (shape (list side side)) (out (cl-tensor:zeros shape))
+         (iterations (if (= side 32) 20000 4000)))
+    (dolist (layout (list (list "contiguous" shape (list side 1) 0)
+                         (list "transpose" shape (list 1 side) 0)
+                         (list "stride2" shape (list (* 2 side) 2) 0)
+                         (list "reverse" shape (list (- side) -1) (1- (* side side)))
+                         (list "broadcast" (list side 1) (list side 0) 0)))
+      (destructuring-bind (name input-shape strides offset) layout
+        (measure-elementwise (format nil "~D ~A" (* side side) name)
+                             (cl-tensor:make-tensor-view storage input-shape :strides strides :offset offset)
+                             out iterations)))))

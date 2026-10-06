@@ -35,5 +35,5 @@
 
 `tref`, `copy-tensor` and same-encoding `astype` preserve raw bits. Encoded narrowing follows the requested rounding mode; widening to real floats is exact.[^encoding]
 
-[^rounding]: Rounding modes affect float-to-integer conversion and encoded narrowing; other conversions ignore the mode after validating its name. Values follow trivial-simd's conversion contract.
+[^rounding]: Rounding modes affect float-to-integer conversion and encoded narrowing; other conversions ignore the mode after validating its name. Values follow trivial-simd's conversion contract. Conversion passes the full signed-stride layout to one upstream N-D call; native-supported float/encoded pairs execute directly in C and other pairs use Lisp.
 [^encoding]: Matching encodings copy bit patterns, including NaN payloads. Different encodings use upstream conversion rules for signed zero, subnormals, infinities and NaN payloads.

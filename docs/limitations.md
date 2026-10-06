@@ -16,19 +16,18 @@ Constructors, access, copying, broadcasting operations, reductions, shape manipu
 
 | Limitation | Ticket |
 |---|---|
+| Short elementwise calls pay fixed N-D layout setup overhead | [trivial-simd #152](https://todo.sr.ht/~takeiteasy/trivial-simd/152) |
 | Interleaved matmul destinations may use scratch or individual products | [#28](https://todo.sr.ht/~takeiteasy/cl-tensor/28) |
 | Irregular reductions pack input layouts; reduction out-forms use output scratch | [#27](https://todo.sr.ht/~takeiteasy/cl-tensor/27) |
 | Native integer/complex row reduction batching | [trivial-simd #148](https://todo.sr.ht/~takeiteasy/trivial-simd/148) |
-| General output-layout validation uses O(element count) workspace when a sorted-stride uniqueness proof fails | [#25](https://todo.sr.ht/~takeiteasy/cl-tensor/25) |
-| Mixed Lisp/foreign storage conservatively snapshots inputs, including disjoint memory | [#26](https://todo.sr.ht/~takeiteasy/cl-tensor/26) |
-| Noncontiguous operations dispatch one bulk call per inner row; upstream stages strided rows | [#19](https://todo.sr.ht/~takeiteasy/cl-tensor/19) |
+| General output-layout validation uses O(element count) workspace when a sorted-stride uniqueness proof fails | [#25](https://todo.sr.ht/~takeiteasy/cl-tensor/25), [trivial-simd #150](https://todo.sr.ht/~takeiteasy/trivial-simd/150) |
+| Mixed Lisp/foreign storage conservatively snapshots inputs, including disjoint memory | [#26](https://todo.sr.ht/~takeiteasy/cl-tensor/26), [trivial-simd #151](https://todo.sr.ht/~takeiteasy/trivial-simd/151) |
 
 ## trivial-simd gaps
 
 | Missing upstream | cl-tensor ticket | trivial-simd ticket |
 |---|---|---|
 | Broader GEMM overlap and destination-layout proofs | [#28](https://todo.sr.ht/~takeiteasy/cl-tensor/28) | [#149](https://todo.sr.ht/~takeiteasy/trivial-simd/149) |
-| N-d strided bulk operations | [#19](https://todo.sr.ht/~takeiteasy/cl-tensor/19) | [#146](https://todo.sr.ht/~takeiteasy/trivial-simd/146) |
 | `log`, `tanh` and sigmoid kernel operators | [#20](https://todo.sr.ht/~takeiteasy/cl-tensor/20) | [#147](https://todo.sr.ht/~takeiteasy/trivial-simd/147) |
 
 The umbrella ticket is [#9](https://todo.sr.ht/~takeiteasy/cl-tensor/9).

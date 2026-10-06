@@ -2,6 +2,46 @@
 
 (in-suite :cl-tensor)
 
+(test nd-elementwise-dispatch
+  (let* ((input (ct:make-tensor-view (ct:tensor-storage (ct:arange 60)) '(3 5)
+                                     :strides '(1 6)))
+         (other (ct:full '(3 5) 2))
+         (mask (ct:compare :gt input 3))
+         (calls 0)
+         (originals (mapcar (lambda (name) (cons name (symbol-function name)))
+                            '(trivial-simd:nd-add! trivial-simd:nd-subtract! trivial-simd:nd-multiply!
+                              trivial-simd:nd-divide! trivial-simd:nd-negate! trivial-simd:nd-abs!
+                              trivial-simd:nd-sqrt! trivial-simd:nd-reciprocal! trivial-simd:nd-min!
+                              trivial-simd:nd-max! trivial-simd:nd-clamp! trivial-simd:nd-compare!
+                              trivial-simd:nd-select! trivial-simd:nd-convert!))))
+    (unwind-protect
+         (progn
+           (dolist (entry originals)
+             (let ((original (cdr entry)))
+               (setf (symbol-function (car entry))
+                     (lambda (&rest arguments) (incf calls) (apply original arguments)))))
+           (dolist (function (list (lambda () (ct:add input other))
+                                  (lambda () (ct:subtract input other))
+                                  (lambda () (ct:multiply input other))
+                                  (lambda () (ct:divide input other))
+                                  (lambda () (ct:negate input))
+                                  (lambda () (ct:abs input))
+                                  (lambda () (ct:sqrt input))
+                                  (lambda () (ct:reciprocal other))
+                                  (lambda () (ct:min input other))
+                                  (lambda () (ct:max input other))
+                                  (lambda () (ct:clamp input 2 8))
+                                  (lambda () (ct:compare :lt input other))
+                                  (lambda () (ct:select mask input other))
+                                  (lambda () (ct:astype input :f64))))
+             (setf calls 0)
+             (funcall function)
+             (is (= 1 calls)))
+           (setf calls 0)
+           (ct:add (ct:zeros '(0 5)) 2)
+           (is (= 1 calls)))
+      (dolist (entry originals) (setf (symbol-function (car entry)) (cdr entry))))))
+
 (test arithmetic-and-broadcasting
   (dolist (dtype '(:f32 :f64 :c32 :c64 :s8 :u8 :s16 :u16 :s32 :u32 :s64 :u64))
     (let ((a (ct:from-data '((2) (4)) :dtype dtype))

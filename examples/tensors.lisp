@@ -64,3 +64,11 @@
   (assert (= 30f0 (ct:tref out 0 1 1)))
   (assert (= 3f0 (ct:tref out 1 0 0)))
   (format t "~&Reversed batch and matrix strides example passed.~%"))
+
+(let* ((input (ct:from-data '((1 2 3) (4 5 6))))
+       (reversed (ct:slice input :selectors '(:all (nil nil -1))))
+       (out (ct:transpose (ct:zeros '(3 2)))))
+  (ct:add! out reversed (ct:from-data '((10) (20))))
+  (assert (= 13f0 (ct:tref out 0 0)))
+  (assert (= 24f0 (ct:tref out 1 2)))
+  (format t "~&N-D broadcasting into a transposed destination passed.~%"))

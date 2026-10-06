@@ -12,7 +12,7 @@ sbcl --non-interactive --eval '(require :asdf)' --eval '(asdf:test-system :cl-te
 |---|---|
 | `tests/tensor.lisp` | Dtype inference, construction, view validation, indexing |
 | `tests/constructors.lisp` | Filled tensors, nested data, sequences, identity matrices, access, copying and foreign storage |
-| `tests/elementwise.lisp` | Arithmetic, masks, conversion, dtype errors, strided output, and aliases across rows and staging blocks |
+| `tests/elementwise.lisp` | Arithmetic, masks, conversion, dtype errors, strided output, aliases across axes, and one N-D dispatch per operation |
 | `tests/shape.lisp` | View sharing, reshape copying, slice bounds, joins/splits and seeded arbitrary layouts |
 | `tests/reductions.lisp` | All reducers, dtypes, axes, widening, empty groups, aliases, foreign storage and seeded enumeration |
 | `tests/matmul.lisp` | Vector/matrix and batch shapes, stride-aware storage sharing, batch dispatch counts, broadcast/reversed runs, scratch fallbacks, empty contractions, aliases, foreign storage and seeded reference products |
@@ -33,6 +33,14 @@ Run the constructor, broadcasting, shape, reduction and matmul examples:
 ```sh
 sbcl --non-interactive --load examples/tensors.lisp
 ```
+
+Measure elementwise time and, on SBCL, allocation:
+
+```sh
+sbcl --non-interactive --load tests/elementwise-bench.lisp
+```
+
+See [elementwise measurements](elementwise-performance.md) for layouts, recorded results and baseline comparison.
 
 [^seed]: SBCL runs use a fixed seed, so failures reproduce. Other Lisps seed from the clock.
 [^backend]: The backend binding is an upstream test hook, not a cl-tensor public API. Use `:native` only when the native library is available; ARM64 does not provide the `:sbcl` SIMD backend.
