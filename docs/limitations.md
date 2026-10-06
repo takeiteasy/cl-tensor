@@ -9,7 +9,8 @@ The tensor type exists. Operations on it do not yet.
 | Axis reductions | [#6](https://todo.sr.ht/~takeiteasy/cl-tensor/6) |
 | Reshape, transpose, slicing, concatenation | [#7](https://todo.sr.ht/~takeiteasy/cl-tensor/7) |
 | `matmul` and batched `matmul` | [#8](https://todo.sr.ht/~takeiteasy/cl-tensor/8) |
-| Quantized dtypes (Q8_0) | [#10](https://todo.sr.ht/~takeiteasy/cl-tensor/10) |
+| Dtype and storage extension protocol | [#23](https://todo.sr.ht/~takeiteasy/cl-tensor/23) |
+| Quantized dtypes, GGUF reader and model executor (planned `cl-inference` repo) | [#24](https://todo.sr.ht/~takeiteasy/cl-tensor/24) |
 | Softmax and RMSNorm | [#21](https://todo.sr.ht/~takeiteasy/cl-tensor/21) |
 | Kernel fusion | [#12](https://todo.sr.ht/~takeiteasy/cl-tensor/12) |
 | Parallel operations | [#13](https://todo.sr.ht/~takeiteasy/cl-tensor/13) |
