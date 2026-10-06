@@ -55,3 +55,12 @@
   (assert (equalp #(2 5 3 2) (ct:tensor-shape batches)))
   (assert (= 4f0 (ct:tref batches 1 4 2 1)))
   (format t "~&Vector, matrix and batched matmul examples passed.~%"))
+
+(let* ((a (ct:reshape (ct:arange 12) '(2 2 3)))
+       (reversed (ct:slice a :selectors '((nil nil -1) :all (nil nil -1))))
+       (out (ct:zeros '(2 2 2))))
+  (ct:matmul! out reversed (ct:ones '(3 2)))
+  (assert (= 21f0 (ct:tref out 0 0 0)))
+  (assert (= 30f0 (ct:tref out 0 1 1)))
+  (assert (= 3f0 (ct:tref out 1 0 0)))
+  (format t "~&Reversed batch and matrix strides example passed.~%"))

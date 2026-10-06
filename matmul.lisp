@@ -32,7 +32,7 @@
             (setf (storage-ref (tensor-storage tensor) index) (aref buffer position))
             (setf (aref buffer position) (storage-ref (tensor-storage tensor) index)))))))
 
-(defun matmul-matrix-adapter (tensor &optional output)
+(defun matmul-matrix-adapter (tensor)
   (let* ((axis (- (tensor-rank tensor) 2))
          (rows (aref (tensor-shape tensor) axis))
          (cols (aref (tensor-shape tensor) (1+ axis)))
@@ -45,22 +45,19 @@
       (let* ((scratch (unless layout
                         (make-array (* rows cols) :element-type (dtype-element-type (tensor-dtype tensor))
                                                  :initial-element (dtype-zero (tensor-dtype tensor)))))
-             (transpose (if (and (not output) (eq layout :column-major))
+             (transpose (if (eq layout :column-major)
                             :transpose :no-transpose)))
         (values
          (lambda (offset)
-           (when (and scratch (not output))
+           (when scratch
              (matmul-copy-matrix tensor offset rows cols rs cs scratch nil))
            (trivial-simd/blas:make-matrix-view
             (or scratch (tensor-storage tensor))
             (if (eq transpose :transpose) cols rows)
             (if (eq transpose :transpose) rows cols)
-            :layout (if output (or layout :row-major) :row-major)
+            :layout :row-major
             :leading-dimension (or ld (cl:max 1 cols)) :offset (if scratch 0 offset)))
-         transpose
-         (when (and output scratch)
-           (lambda (offset)
-             (matmul-copy-matrix tensor offset rows cols rs cs scratch t))))))))
+         transpose)))))
 
 (defun matmul-vector-adapter (tensor axis &optional output)
   (let* ((count (aref (tensor-shape tensor) axis))
@@ -76,6 +73,89 @@
       (values (or scratch (tensor-storage tensor)) increment
               (if scratch 0 (+ offset (if (minusp stride) (* (1- count) stride) 0)))))))
 
+(defun matmul-strides-unique-p (shape strides)
+  (let ((extent 0)
+        (axes (sort (loop for dimension in shape for stride in strides
+                          when (> dimension 1) collect (cons (cl:abs stride) dimension))
+                    #'< :key #'car)))
+    (loop for (stride . dimension) in axes
+          always (> stride extent)
+          do (incf extent (* stride (1- dimension))))))
+
+(defun matmul-gemm-adapter (tensor &optional output)
+  (let* ((axis (- (tensor-rank tensor) 2))
+         (rows (aref (tensor-shape tensor) axis))
+         (cols (aref (tensor-shape tensor) (1+ axis)))
+         (rs (if (= rows 1) 0 (aref (tensor-strides tensor) axis)))
+         (cs (if (= cols 1) 0 (aref (tensor-strides tensor) (1+ axis))))
+         ;; TODO: sorted-stride proof rejects interleaving; adopt upstream proofs (#28).
+         (scratch (when (or (not (typep rs 'trivial-simd/blas::blas-increment))
+                           (not (typep cs 'trivial-simd/blas::blas-increment))
+                           (and output
+                                (not (matmul-strides-unique-p (list rows cols) (list rs cs)))))
+                    (make-array (* rows cols) :element-type (dtype-element-type (tensor-dtype tensor))
+                                             :initial-element (dtype-zero (tensor-dtype tensor))))))
+    (values
+     (lambda (offset)
+       (when (and scratch (not output))
+         (matmul-copy-matrix tensor offset rows cols rs cs scratch nil))
+       (trivial-simd/blas:make-matrix-view
+        (or scratch (tensor-storage tensor)) rows cols
+        :row-stride (if scratch cols rs) :column-stride (if scratch 1 cs)
+        :offset (if scratch 0 offset)))
+     scratch
+     (when (and output scratch)
+       (lambda (offset) (matmul-copy-matrix tensor offset rows cols rs cs scratch t))))))
+
+(defun matmul-batch-run (batch layouts)
+  (let ((prefix (length batch)) (count 1) (steps (mapcar (constantly 0) layouts)))
+    (loop for axis downfrom (1- (length batch)) to 0
+          for dimension = (aref batch axis)
+          do (cond ((= dimension 1) (setf prefix axis))
+                   ((= count 1)
+                    (setf steps (mapcar (lambda (layout) (aref layout axis)) layouts)
+                          count dimension prefix axis))
+                   ((every (lambda (layout step) (= (aref layout axis) (* count step))) layouts steps)
+                    (setf count (* count dimension) prefix axis))
+                   (t (return))))
+    (values prefix count steps)))
+
+(defun matmul-run-matrices (a b out batch layouts offsets)
+  (multiple-value-bind (aa ascratch) (matmul-gemm-adapter a)
+    (multiple-value-bind (ba bscratch) (matmul-gemm-adapter b)
+      (multiple-value-bind (oa oscratch scatter) (matmul-gemm-adapter out t)
+        (multiple-value-bind (prefix count steps) (matmul-batch-run batch layouts)
+          (let* ((single (eq (tensor-dtype a) :f32))
+                 (one (coerce-value 1 (tensor-dtype a))) (zero (dtype-zero (tensor-dtype a)))
+                 (gemm (if single #'trivial-simd/blas:sgemm #'trivial-simd/blas:dgemm))
+                 (batched (if single #'trivial-simd/blas:sgemm-batch-strided
+                                     #'trivial-simd/blas:dgemm-batch-strided))
+                 (rank (- (tensor-rank out) 2)))
+            (when (or ascratch bscratch oscratch
+                      (not (matmul-strides-unique-p
+                            (list (aref (tensor-shape out) rank)
+                                  (aref (tensor-shape out) (1+ rank)) count)
+                            (list (aref (tensor-strides out) rank)
+                                  (aref (tensor-strides out) (1+ rank)) (third steps)))))
+              (setf prefix (length batch) count 1 steps '(0 0 0)))
+            (call-with-offsets
+             (subseq batch 0 prefix) (mapcar (lambda (layout) (subseq layout 0 prefix)) layouts) offsets
+             (lambda (ai bi oi)
+               (loop for start from 0 below count by 1073741823
+                     for chunk = (cl:min 1073741823 (- count start))
+                     for ao = (+ ai (* start (first steps)))
+                     for bo = (+ bi (* start (second steps)))
+                     for co = (+ oi (* start (third steps)))
+                     do (if (= chunk 1)
+                            (funcall gemm :no-transpose :no-transpose one
+                                     (funcall aa ao) (funcall ba bo) zero (funcall oa co))
+                            (funcall batched :no-transpose :no-transpose one
+                                     (funcall aa ao) (funcall ba bo) zero (funcall oa co)
+                                     :batch-count chunk :a-stride (first steps)
+                                     :b-stride (second steps) :c-stride (third steps)))
+                        (when scatter (funcall scatter co))))))))))
+  out)
+
 (defun matmul-run (a b out batch k left-vector right-vector)
   (let* ((dtype (tensor-dtype a))
          (single (eq dtype :f32))
@@ -86,6 +166,8 @@
          (layouts (list (broadcast-strides ab batch) (broadcast-strides bb batch)
                         (tensor-strides ob)))
          (offsets (list (tensor-offset a) (tensor-offset b) (tensor-offset out))))
+    (unless (or left-vector right-vector)
+      (return-from matmul-run (matmul-run-matrices a b out batch layouts offsets)))
     (multiple-value-bind (aa ta)
         (if left-vector
             (matmul-vector-adapter a (1- (tensor-rank a)))
@@ -94,15 +176,10 @@
           (if right-vector
               (matmul-vector-adapter b (- (tensor-rank b) 2))
               (matmul-matrix-adapter b))
-        (multiple-value-bind (oa ignored scatter)
-            (cond ((and left-vector right-vector) (values nil nil nil))
-                  ((or left-vector right-vector)
-                   (matmul-vector-adapter out
-                                          (if left-vector (1- (tensor-rank out))
-                                              (- (tensor-rank out) 2)) t))
-                  (t (matmul-matrix-adapter out t)))
-          (declare (ignore ignored))
-          ;; TODO: one BLAS call per batch; adopt strided-batched GEMM (#17).
+        (let ((oa (unless (and left-vector right-vector)
+                    (matmul-vector-adapter out
+                                           (if left-vector (1- (tensor-rank out))
+                                               (- (tensor-rank out) 2)) t))))
           (call-with-offsets
            batch layouts offsets
            (lambda (ai bi oi)
@@ -113,7 +190,7 @@
                     (setf (storage-ref (tensor-storage out) oi)
                           (funcall (if single #'trivial-simd/blas:sdot #'trivial-simd/blas:ddot)
                                    k av inc-a bv inc-b :x-offset start-a :y-offset start-b)))))
-               ((or left-vector right-vector)
+               (t
                 (multiple-value-bind (vector increment start)
                     (if left-vector (funcall aa ai) (funcall ba bi))
                   (multiple-value-bind (target target-increment target-start) (funcall oa oi)
@@ -122,11 +199,7 @@
                                  (if (eq tb :transpose) :no-transpose :transpose) ta)
                              one (if left-vector (funcall ba bi) (funcall aa ai))
                              vector increment zero target target-increment
-                             :x-offset start :y-offset target-start))))
-               (t
-                (funcall (if single #'trivial-simd/blas:sgemm #'trivial-simd/blas:dgemm)
-                         ta tb one (funcall aa ai) (funcall ba bi) zero (funcall oa oi))
-                (when scatter (funcall scatter oi))))))))))
+                             :x-offset start :y-offset target-start)))))))))))
   out)
 
 (defun tensor-matmul (a b out)

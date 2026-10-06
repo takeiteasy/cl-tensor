@@ -44,7 +44,7 @@ See [reductions](reductions.md) and [shape operations](shape.md) for their inter
 
 ## Matrix multiplication
 
-Matmul broadcasts batch axes and promotes vectors into matrix axes. Compatible matrices wrap their existing storage for BLAS; transpose-compatible inputs use transpose flags. Other matrices pack into reusable buffers. Overlapping inputs are snapshotted before batch writes; compatible destinations receive direct writes and irregular output matrices scatter from scratch.
+Matmul broadcasts batch axes and promotes vectors into matrix axes. Matrix products wrap existing storage with independent signed row/column strides and combine compatible batch axes into constant-stride GEMM runs. Vector products use dot/GEMV and retain packing for irregular matrix layouts. Overlapping inputs are snapshotted before batch writes. Destinations proven unique by upstream receive direct writes; other valid matrix layouts scatter from reusable scratch.
 
 See [matrix multiplication](matmul.md) for shapes, dtypes and output behavior.
 

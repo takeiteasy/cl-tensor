@@ -15,7 +15,7 @@ sbcl --non-interactive --eval '(require :asdf)' --eval '(asdf:test-system :cl-te
 | `tests/elementwise.lisp` | Arithmetic, masks, conversion, dtype errors, strided output, and aliases across rows and staging blocks |
 | `tests/shape.lisp` | View sharing, reshape copying, slice bounds, joins/splits and seeded arbitrary layouts |
 | `tests/reductions.lisp` | All reducers, dtypes, axes, widening, empty groups, aliases, foreign storage and seeded enumeration |
-| `tests/matmul.lisp` | Vector/matrix and batch shapes, transpose storage sharing, arbitrary strides, empty contractions, aliases, foreign storage and seeded reference products |
+| `tests/matmul.lisp` | Vector/matrix and batch shapes, stride-aware storage sharing, batch dispatch counts, broadcast/reversed runs, scratch fallbacks, empty contractions, aliases, foreign storage and seeded reference products |
 | `tests/random.lisp` | Seeded random shapes, strides, broadcasting and output uniqueness checked against independent Lisp calculations[^seed] |
 
 ## Backends and examples

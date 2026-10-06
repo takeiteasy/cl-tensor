@@ -16,7 +16,7 @@ Constructors, access, copying, broadcasting operations, reductions, shape manipu
 
 | Limitation | Ticket |
 |---|---|
-| Matmul loops over batches and packs irregular matrix layouts | [#17](https://todo.sr.ht/~takeiteasy/cl-tensor/17) |
+| Interleaved matmul destinations may use scratch or individual products | [#28](https://todo.sr.ht/~takeiteasy/cl-tensor/28) |
 | Irregular reductions pack input layouts; reduction out-forms use output scratch | [#27](https://todo.sr.ht/~takeiteasy/cl-tensor/27) |
 | Native integer/complex row reduction batching | [trivial-simd #148](https://todo.sr.ht/~takeiteasy/trivial-simd/148) |
 | General output-layout validation uses O(element count) workspace when a sorted-stride uniqueness proof fails | [#25](https://todo.sr.ht/~takeiteasy/cl-tensor/25) |
@@ -27,7 +27,7 @@ Constructors, access, copying, broadcasting operations, reductions, shape manipu
 
 | Missing upstream | cl-tensor ticket | trivial-simd ticket |
 |---|---|---|
-| Strided-batched GEMM and arbitrary-stride matrix views | [#17](https://todo.sr.ht/~takeiteasy/cl-tensor/17) | [#144](https://todo.sr.ht/~takeiteasy/trivial-simd/144) |
+| Broader GEMM overlap and destination-layout proofs | [#28](https://todo.sr.ht/~takeiteasy/cl-tensor/28) | [#149](https://todo.sr.ht/~takeiteasy/trivial-simd/149) |
 | N-d strided bulk operations | [#19](https://todo.sr.ht/~takeiteasy/cl-tensor/19) | [#146](https://todo.sr.ht/~takeiteasy/trivial-simd/146) |
 | `log`, `tanh` and sigmoid kernel operators | [#20](https://todo.sr.ht/~takeiteasy/cl-tensor/20) | [#147](https://todo.sr.ht/~takeiteasy/trivial-simd/147) |
 
