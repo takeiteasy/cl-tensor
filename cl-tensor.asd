@@ -2,7 +2,7 @@
   :description "NumPy-like N-dimensional tensors for Common Lisp, built on trivial-simd"
   :author "George Watson"
   :license "MIT"
-  :version "0.0.1"
+  :version "0.0.0"
   :depends-on ("trivial-simd" "trivial-simd/blas" "cffi")
   :serial t
   :components ((:file "package") (:file "dtype") (:file "tensor")

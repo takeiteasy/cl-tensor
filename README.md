@@ -1,5 +1,7 @@
 # cl-tensor
 
+> **Work in progress.** This project is under development; expect missing features and breaking changes.
+
 NumPy-like N-dimensional tensors for Common Lisp, built on
 [trivial-simd](https://git.sr.ht/~takeiteasy/trivial-simd) and `trivial-simd/blas`.
 
