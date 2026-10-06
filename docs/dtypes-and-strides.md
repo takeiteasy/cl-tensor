@@ -13,7 +13,7 @@ Dtypes are strict and strides are arbitrary.
 | `:f16` `:bf16` | `(unsigned-byte 16)` | 2 | storage only |
 
 - Mixed dtypes signal an error. Conversion is explicit, with `astype`.
-- Scalars are coerced to the tensor dtype. A float scalar with an integer tensor signals an error.
+- Scalars and constructor values are coerced to the tensor dtype. Integer dtypes require in-range integers; floats and ratios signal an error. Real dtypes reject complex values, and complex dtypes accept real values with a zero imaginary component.
 - Storage of `(unsigned-byte 16)` infers as `:u16`. Pass `:f16` or `:bf16` explicitly:
 
 ```lisp
@@ -23,7 +23,7 @@ Dtypes are strict and strides are arbitrary.
 ;; => (:U16 :BF16)
 ```
 
-Dtype conversion and scalar coercion are listed in [limitations](limitations.md).
+Integer arithmetic wraps at the dtype width; division truncates toward zero. [Conversion](conversion.md) rounds and clamps instead. `:f16` and `:bf16` access preserves raw bits; use `astype` to encode or decode numeric values.
 
 ## Strides
 
@@ -51,4 +51,4 @@ Strides count elements, not bytes, and may be negative or zero.
 
 Axes of size 1 ignore their stride.[^fast]
 
-[^fast]: Operations take the kernel fast path when `inner-contiguous-p` holds and loop over the outer axes. Other operands are copied to a contiguous temporary first.
+[^fast]: Compatible contiguous tensors use one bulk call. Other layouts loop over outer axes and pass each inner row's offsets and strides to trivial-simd. Zero-stride inner inputs become scalar operands; operations that require a vector materialize a row. Upstream stages strided rows as needed. See [performance limitations](limitations.md#performance).

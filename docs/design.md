@@ -1,6 +1,6 @@
 # Design
 
-A tensor is typed storage plus a strided window onto it. Views share storage; nothing is copied.
+A tensor is typed storage plus a strided window onto it. Views share storage; constructors, `copy-tensor`, `astype` and allocating operations return independent storage.
 
 | Slot | Meaning |
 |---|---|
@@ -33,6 +33,12 @@ A view is valid when:
 ## Extension points
 
 Autograd attaches through a wrapper around a tensor, or through a subtype defined with `(:include tensor)`. Code that accepts a `tensor` accepts both.
+
+## Operation execution
+
+Elementwise operations compute the broadcast shape, validate dtypes and output layout, snapshot aliased inputs, then dispatch contiguous tensors or inner rows to trivial-simd. Inputs support arbitrary strides. Out-forms reject layouts in which two logical elements share a storage location.
+
+Lisp storage uses array access. Foreign storage uses typed CFFI access and remains owned by the caller; its memory must stay valid for the entire operation.
 
 See [limitations](limitations.md) for what is not built yet.
 

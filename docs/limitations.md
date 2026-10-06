@@ -1,11 +1,9 @@
 # Limitations
 
-The tensor type exists. Operations on it do not yet.
+Constructors, element access, copying, broadcasting operations and dtype conversion are implemented. The following areas remain open.
 
 | Area | Ticket |
 |---|---|
-| Constructors (`zeros`, `arange`, …), element access, printing, `copy-tensor` | [#4](https://todo.sr.ht/~takeiteasy/cl-tensor/4) |
-| Broadcasting elementwise operations, `astype`, scalar coercion | [#5](https://todo.sr.ht/~takeiteasy/cl-tensor/5) |
 | Axis reductions | [#6](https://todo.sr.ht/~takeiteasy/cl-tensor/6) |
 | Reshape, transpose, slicing, concatenation | [#7](https://todo.sr.ht/~takeiteasy/cl-tensor/7) |
 | `matmul` and batched `matmul` | [#8](https://todo.sr.ht/~takeiteasy/cl-tensor/8) |
@@ -16,6 +14,14 @@ The tensor type exists. Operations on it do not yet.
 | Parallel operations | [#13](https://todo.sr.ht/~takeiteasy/cl-tensor/13) |
 | Autograd | [#14](https://todo.sr.ht/~takeiteasy/cl-tensor/14) |
 | Continuous integration | [#22](https://todo.sr.ht/~takeiteasy/cl-tensor/22) |
+
+## Performance
+
+| Limitation | Ticket |
+|---|---|
+| General output-layout validation uses O(element count) workspace when a sorted-stride uniqueness proof fails | [#25](https://todo.sr.ht/~takeiteasy/cl-tensor/25) |
+| Mixed Lisp/foreign storage conservatively snapshots inputs, including disjoint memory | [#26](https://todo.sr.ht/~takeiteasy/cl-tensor/26) |
+| Noncontiguous operations dispatch one bulk call per inner row; upstream stages strided rows | [#19](https://todo.sr.ht/~takeiteasy/cl-tensor/19) |
 
 ## trivial-simd gaps
 

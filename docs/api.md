@@ -1,6 +1,12 @@
 # API
 
-Package `cl-tensor`, nickname it locally (`ct` below). Everything listed here exists today; see [limitations](limitations.md) for what does not.
+Package `cl-tensor`, nickname it locally (`ct` below). Use qualified names: `abs`, `sqrt`, `min` and `max` shadow Common Lisp symbols. See [limitations](limitations.md) for planned operations.
+
+| Topic | Reference |
+|---|---|
+| Filled tensors, sequences, nested data, element access and copying | [Constructors and access](constructors.md) |
+| Broadcasting arithmetic, comparisons and selection | [Elementwise operations](elementwise.md) |
+| Explicit dtype changes and half-float encoding | [Conversion](conversion.md) |
 
 ## Construction
 
@@ -10,7 +16,7 @@ Package `cl-tensor`, nickname it locally (`ct` below). Everything listed here ex
 | `(make-tensor-view storage shape &key dtype strides offset)` | Tensor sharing `storage`; signals an error if the view is invalid |
 | `(row-major-strides shape)` | Row-major strides for `shape` |
 
-`shape` is a list or vector of non-negative integers. `dtype` defaults to the dtype inferred from `storage`.
+`shape` is a list or vector of non-negative integers. In `make-tensor-view`, `dtype` defaults to the dtype inferred from `storage`.
 
 ```lisp
 (ct:make-tensor '(2 3) :dtype :f64)

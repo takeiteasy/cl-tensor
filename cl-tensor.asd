@@ -3,15 +3,17 @@
   :author "George Watson"
   :license "MIT"
   :version "0.0.1"
-  :depends-on ("trivial-simd" "trivial-simd/blas")
+  :depends-on ("trivial-simd" "trivial-simd/blas" "cffi")
   :serial t
-  :components ((:file "package") (:file "dtype") (:file "tensor"))
+  :components ((:file "package") (:file "dtype") (:file "tensor")
+               (:file "access") (:file "constructors") (:file "elementwise"))
   :in-order-to ((asdf:test-op (asdf:test-op "cl-tensor/tests"))))
 
 (asdf:defsystem "cl-tensor/tests"
   :depends-on ("cl-tensor" "fiveam")
   :serial t
-  :components ((:file "tests/package") (:file "tests/tensor") (:file "tests/random"))
+  :components ((:file "tests/package") (:file "tests/tensor")
+               (:file "tests/constructors") (:file "tests/elementwise") (:file "tests/random"))
   :perform (asdf:test-op (op component)
              (declare (ignore op component))
              (unless (uiop:symbol-call :cl-tensor/tests :run-tests)
