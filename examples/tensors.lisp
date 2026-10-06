@@ -34,3 +34,11 @@
   (assert (= 2f0 (ct:tref (ct:astype bits :f32) 1))))
 
 (format t "Constructor, broadcasting and conversion examples passed.~%")
+
+(let* ((matrix (ct:reshape (ct:arange 12) '(3 4)))
+       (reversed (ct:slice matrix :selectors '(:all (nil nil -1))))
+       (means (ct:mean reversed :axis 1 :keepdims t))
+       (centered (ct:subtract reversed means)))
+  (format t "~&Reversed rows: ~S~%Row means: ~S~%Centered row sums: ~S~%"
+          (ct:tensor-shape reversed) (ct:tensor-storage means)
+          (ct:tensor-storage (ct:sum centered :axis 1))))

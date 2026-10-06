@@ -11,7 +11,7 @@ NumPy-like N-dimensional tensors for Common Lisp, built on
 ;; => #<TENSOR :F32 (2 3)>
 ```
 
-Construct, index and copy strided tensors; broadcast arithmetic, comparisons and selection; convert dtypes explicitly. See [limitations](docs/limitations.md) for planned operations.
+Construct, index and copy strided tensors; reshape and slice views; broadcast arithmetic, comparisons and selection; reduce axes and convert dtypes explicitly. See [limitations](docs/limitations.md) for planned operations.
 
 ## Docs
 
@@ -20,6 +20,8 @@ Construct, index and copy strided tensors; broadcast arithmetic, comparisons and
 - [API](docs/api.md)
 - [Constructors and access](docs/constructors.md)
 - [Elementwise operations](docs/elementwise.md)
+- [Reductions](docs/reductions.md)
+- [Shape operations](docs/shape.md)
 - [Conversion](docs/conversion.md)
 - [Testing](docs/testing.md)
 - [Limitations](docs/limitations.md)

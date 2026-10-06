@@ -34,6 +34,14 @@ A view is valid when:
 
 Autograd attaches through a wrapper around a tensor, or through a subtype defined with `(:include tensor)`. Code that accepts a `tensor` accepts both.
 
+## Shape and reduction execution
+
+Shape operations build validated views; reshape copies when its strides cannot represent the requested logical order. Concatenate and stack allocate independent storage.
+
+Reductions group retained and reduced axes into rows, packing when inner rows are not contiguous. Compatible real float batches execute natively; integer and complex batches use upstream typed reducers. Destination-writing reductions compute before scattering, so overlapping views read their original values.
+
+See [reductions](reductions.md) and [shape operations](shape.md) for their interfaces.
+
 ## Operation execution
 
 Elementwise operations compute the broadcast shape, validate dtypes and output layout, snapshot aliased inputs, then dispatch contiguous tensors or inner rows to trivial-simd. Inputs support arbitrary strides. Out-forms reject layouts in which two logical elements share a storage location.

@@ -1,11 +1,13 @@
 # API
 
-Package `cl-tensor`, nickname it locally (`ct` below). Use qualified names: `abs`, `sqrt`, `min` and `max` shadow Common Lisp symbols. See [limitations](limitations.md) for planned operations.
+Package `cl-tensor`, nickname it locally (`ct` below). Use qualified names: `abs`, `sqrt`, `min`, `max` and `concatenate` shadow Common Lisp symbols. See [limitations](limitations.md) for planned operations.
 
 | Topic | Reference |
 |---|---|
 | Filled tensors, sequences, nested data, element access and copying | [Constructors and access](constructors.md) |
 | Broadcasting arithmetic, comparisons and selection | [Elementwise operations](elementwise.md) |
+| Axis reductions and logical arg indices | [Reductions](reductions.md) |
+| Views, reshape, slicing and joining | [Shape operations](shape.md) |
 | Explicit dtype changes and half-float encoding | [Conversion](conversion.md) |
 
 ## Construction

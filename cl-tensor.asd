@@ -6,14 +6,16 @@
   :depends-on ("trivial-simd" "trivial-simd/blas" "cffi")
   :serial t
   :components ((:file "package") (:file "dtype") (:file "tensor")
-               (:file "access") (:file "constructors") (:file "elementwise"))
+               (:file "access") (:file "constructors") (:file "elementwise")
+               (:file "shape") (:file "reductions"))
   :in-order-to ((asdf:test-op (asdf:test-op "cl-tensor/tests"))))
 
 (asdf:defsystem "cl-tensor/tests"
   :depends-on ("cl-tensor" "fiveam")
   :serial t
   :components ((:file "tests/package") (:file "tests/tensor")
-               (:file "tests/constructors") (:file "tests/elementwise") (:file "tests/random"))
+               (:file "tests/constructors") (:file "tests/elementwise") (:file "tests/random")
+               (:file "tests/shape") (:file "tests/reductions"))
   :perform (asdf:test-op (op component)
              (declare (ignore op component))
              (unless (uiop:symbol-call :cl-tensor/tests :run-tests)
