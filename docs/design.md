@@ -42,6 +42,12 @@ Reductions group retained and reduced axes into rows, packing when inner rows ar
 
 See [reductions](reductions.md) and [shape operations](shape.md) for their interfaces.
 
+## Matrix multiplication
+
+Matmul broadcasts batch axes and promotes vectors into matrix axes. Compatible matrices wrap their existing storage for BLAS; transpose-compatible inputs use transpose flags. Other matrices pack into reusable buffers. Overlapping inputs are snapshotted before batch writes; compatible destinations receive direct writes and irregular output matrices scatter from scratch.
+
+See [matrix multiplication](matmul.md) for shapes, dtypes and output behavior.
+
 ## Operation execution
 
 Elementwise operations compute the broadcast shape, validate dtypes and output layout, snapshot aliased inputs, then dispatch contiguous tensors or inner rows to trivial-simd. Inputs support arbitrary strides. Out-forms reject layouts in which two logical elements share a storage location.

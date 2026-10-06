@@ -1,10 +1,9 @@
 # Limitations
 
-Constructors, access, copying, broadcasting operations, reductions, shape manipulation and dtype conversion are implemented. The following areas remain open.
+Constructors, access, copying, broadcasting operations, reductions, shape manipulation, real-float matrix multiplication and dtype conversion are implemented. The following areas remain open.
 
 | Area | Ticket |
 |---|---|
-| `matmul` and batched `matmul` | [#8](https://todo.sr.ht/~takeiteasy/cl-tensor/8) |
 | Dtype and storage extension protocol | [#23](https://todo.sr.ht/~takeiteasy/cl-tensor/23) |
 | Quantized dtypes, GGUF reader and model executor (planned `cl-inference` repo) | [#24](https://todo.sr.ht/~takeiteasy/cl-tensor/24) |
 | Softmax and RMSNorm | [#21](https://todo.sr.ht/~takeiteasy/cl-tensor/21) |
@@ -17,6 +16,7 @@ Constructors, access, copying, broadcasting operations, reductions, shape manipu
 
 | Limitation | Ticket |
 |---|---|
+| Matmul loops over batches and packs irregular matrix layouts | [#17](https://todo.sr.ht/~takeiteasy/cl-tensor/17) |
 | Irregular reductions pack input layouts; reduction out-forms use output scratch | [#27](https://todo.sr.ht/~takeiteasy/cl-tensor/27) |
 | Native integer/complex row reduction batching | [trivial-simd #148](https://todo.sr.ht/~takeiteasy/trivial-simd/148) |
 | General output-layout validation uses O(element count) workspace when a sorted-stride uniqueness proof fails | [#25](https://todo.sr.ht/~takeiteasy/cl-tensor/25) |

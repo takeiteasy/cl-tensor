@@ -25,6 +25,8 @@ Dtypes are strict and strides are arbitrary.
 
 Integer arithmetic wraps at the dtype width; division truncates toward zero. [Conversion](conversion.md) rounds and clamps instead. `:f16` and `:bf16` access preserves raw bits; use `astype` to encode or decode numeric values.
 
+[Matrix multiplication](matmul.md) supports matching `:f32` or `:f64` operands.
+
 ## Strides
 
 Strides count elements, not bytes, and may be negative or zero.

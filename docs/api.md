@@ -7,6 +7,7 @@ Package `cl-tensor`, nickname it locally (`ct` below). Use qualified names: `abs
 | Filled tensors, sequences, nested data, element access and copying | [Constructors and access](constructors.md) |
 | Broadcasting arithmetic, comparisons and selection | [Elementwise operations](elementwise.md) |
 | Axis reductions and logical arg indices | [Reductions](reductions.md) |
+| Vector, matrix and batched multiplication | [Matrix multiplication](matmul.md) |
 | Views, reshape, slicing and joining | [Shape operations](shape.md) |
 | Explicit dtype changes and half-float encoding | [Conversion](conversion.md) |
 

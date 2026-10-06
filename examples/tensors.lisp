@@ -42,3 +42,16 @@
   (format t "~&Reversed rows: ~S~%Row means: ~S~%Centered row sums: ~S~%"
           (ct:tensor-shape reversed) (ct:tensor-storage means)
           (ct:tensor-storage (ct:sum centered :axis 1))))
+
+(let* ((matrix (ct:from-data '((1 2 3) (4 5 6))))
+       (vector (ct:from-data '(2 3 4)))
+       (product (ct:matmul matrix vector))
+       (out (ct:transpose (ct:zeros '(3 2))))
+       (batches (ct:matmul (ct:ones '(2 1 3 4)) (ct:ones '(1 5 4 2)))))
+  (assert (= 20f0 (ct:tref product 0)))
+  (assert (= 47f0 (ct:tref product 1)))
+  (ct:matmul! out matrix (ct:eye 3))
+  (assert (= 6f0 (ct:tref out 1 2)))
+  (assert (equalp #(2 5 3 2) (ct:tensor-shape batches)))
+  (assert (= 4f0 (ct:tref batches 1 4 2 1)))
+  (format t "~&Vector, matrix and batched matmul examples passed.~%"))
