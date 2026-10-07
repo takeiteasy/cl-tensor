@@ -59,7 +59,7 @@ Defaults allocate ordinary one-element-block arrays, enforce dtype/storage eleme
 
 ## Select an operation
 
-Specialize `resolve-operation (dtype operation inputs options)`. Return two values: the result dtype keyword and an executor function. Return NIL to decline. Selection validates accepted dtype combinations and extension-specific options, without writing storage.
+Specialize `resolve-operation (dtype operation inputs options)`. Return the result dtype keyword, an executor function and an optional direct selector as multiple values. Return NIL to decline. Selection validates accepted dtype combinations and extension-specific options, without writing storage.
 
 ```lisp
 (defmethod ct:resolve-operation ((dtype packed8) operation inputs options)
@@ -69,7 +69,7 @@ Specialize `resolve-operation (dtype operation inputs options)`. Return two valu
     (values :f32 #'packed-matmul!)))
 ```
 
-The executor has signature `(out inputs options)`. It fills all logical result elements, reads inputs without modifying them, and respects their validated layouts. Its return value is ignored. The core allocates an independent result and checks a supplied destination's shape, dtype, uniqueness and copy support before invoking the executor. Destination-writing calls copy the completed result into the caller's destination, preserving aliased inputs.[^staging]
+The executor has signature `(out inputs options)`. It fills all logical result elements, reads inputs without modifying them, and respects their validated layouts. Its return value is ignored. By default, the core allocates an independent result and checks a supplied destination's shape, dtype, uniqueness and copy support before invoking the executor. Destination-writing calls copy the completed result into the caller's destination, preserving aliased inputs.[^staging]
 
 Core computes broadcasting, matmul and reduction shapes. Axes in hook options are normalized, sorted lists of nonnegative axis numbers; an empty list means no axes. Extensions choose the result dtype, including mixed matmul such as packed weights × `:f32` activations → `:f32`.
 
@@ -82,17 +82,29 @@ Core computes broadcasting, matmul and reduction shapes. Axes in hook options ar
 | `:convert` | Input tensor; requested `:dtype`, `:rounding` |
 | `:dequantize` | Input tensor; requested `:dtype` |
 
-Selection visits distinct input descriptors in operand order, then the requested destination dtype for conversion or an explicit dtype option. The first accepting method wins. Built-in methods decline unless their operation table supplies a selector. An operation-table selector receives `(dtype operation inputs options)` and follows the same two-value contract.
+Selection visits distinct input descriptors in operand order, then the requested destination dtype for conversion or an explicit dtype option. The first accepting method wins. Built-in methods decline unless their operation table supplies a selector. An operation-table selector receives `(dtype operation inputs options)` and follows the same multiple-value contract.
 
 Vector–vector matmul tries `:dot`, then `:matmul`. Conversion hooks must return the requested dtype. `(dequantize tensor &key (dtype :f32))` tries `:dequantize`, then ordinary `astype` dispatch. Both return independent storage.
 
+## Safe direct execution
+
+Return an optional third function to inspect a supplied destination after core checks its shape, dtype, uniqueness and copy support. This direct selector has signature `(out inputs options)`, performs no writes, and returns a direct executor or NIL to use staging. Core rejects non-function selectors and non-function executor results. Allocating calls use the ordinary executor.
+
+```lisp
+(values :my-packed8 #'staged-negate! #'select-direct-negate)
+```
+
+The direct executor has signature `(out inputs options)` and fills the supplied destination. It guarantees the same result as reading all inputs before any destination writes, including hidden storage aliases. If it signals an error, the destination remains unchanged. Core trusts this declaration; it does not inspect opaque layouts or add snapshots. Its return value is ignored, and the public out-form returns `out`.[^direct]
+
+The [opaque example](../examples/extensions.lisp) accepts separate buffers and exact aliases for negation, checks every code for overflow before writing, and declines shifted aliases. A declined direct selector uses the ordinary executor with full-result staging. Existing two-value selectors also use staging.
+
 ## Fallback and example
 
-When all selectors decline, built-in dtypes use existing kernels. Readable custom storage is packed into ordinary arrays; destination writes use independent results and protocol copying. Custom dtypes without accepting methods signal `unsupported-operation`; computation does not implicitly dequantize.
+When all selectors decline, built-in dtypes use existing kernels. Readable custom storage uses ordinary-array backend fallback. Elementwise operations pack broadcasted logical inputs in reusable buffers of at most 4,096 elements per tensor operand. Destination writes retain an independent full result and copy it only after all chunks succeed. Other operation families pack complete inputs. Custom dtypes without accepting methods signal `unsupported-operation`; computation does not implicitly dequantize.
 
 Ordinary arrays retain built-in dtype inference even after extensions register scalar types. Encoded/custom storage overrides `storage-dtype` or supplies `:dtype` explicitly.
 
-[The runnable example](../examples/extensions.lisp) defines an opaque format with two signed-byte codes and one float scale per block. Its Lisp demonstration kernels decode before computing; production extensions supply their own kernels without changing core.
+[The runnable example](../examples/extensions.lisp) defines an opaque format with two signed-byte codes and one float scale per block. Its matmul demonstration decodes before computing; negation operates on codes directly. Production extensions supply their own kernels without changing core.
 
 ```lisp
 (load "examples/extensions.lisp")
@@ -100,12 +112,13 @@ Ordinary arrays retain built-in dtype inference even after extensions register s
 ;; => :F32 vector (17 39), and independent decoded weights
 ```
 
-See [dispatch measurements](extensions-performance.md) for complete-call time and allocation with built-in storage.
+See [dispatch measurements](extensions-performance.md) for built-in storage and [staging measurements](extensions-staging-performance.md) for custom storage and direct execution.
 
 ## Limitations
 
-- Extension out-forms stage a complete result; accessible-storage fallback packs complete inputs. Bounded staging and alias-safe direct execution are tracked in [#32](https://todo.sr.ht/~takeiteasy/cl-tensor/32).
+- Staged executors and elementwise fallback retain O(output elements) scratch. Reduction, normalization, matmul and conversion fallback pack complete custom-storage inputs: [#33](https://todo.sr.ht/~takeiteasy/cl-tensor/33).
 - Production quantized formats and model integration belong to the inference project: [#24](https://todo.sr.ht/~takeiteasy/cl-tensor/24).
 
 [^registry]: Descriptor replacement requires a fresh Lisp image. Reloading methods on an existing descriptor class is supported; duplicate registration does not replace its metadata. Concurrent registry mutation is outside the protocol.
 [^staging]: Executor failures leave a supplied destination unchanged. A failing final copy method can partially update it; extensions validate their copy prerequisites before writing.
+[^direct]: The extension owns any workspace and transaction mechanism. Opting into direct execution does not establish a bounded-memory guarantee. Validate every condition that can fail before writing, or provide rollback.

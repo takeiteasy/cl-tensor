@@ -301,3 +301,215 @@
     (signals error (ct:add! out a a))
     (is (equalp '(1f0 1f0) (values-of out)))
     (signals error (ct:astype a :f32))))
+
+(defvar *allocation-shapes* nil)
+(defvar *record-allocations* nil)
+
+(defmethod ct:allocate-storage :around ((dtype ct:dtype) shape)
+  (when *record-allocations* (push (coerce shape 'list) *allocation-shapes*))
+  (call-next-method))
+
+(defclass failing-storage (wrapped-storage)
+  ((reads :initform 0 :accessor reads)
+   (fail-at :initarg :fail-at :reader fail-at)))
+
+(defmethod ct:storage-ref ((storage failing-storage) index)
+  (when (= (incf (reads storage)) (fail-at storage)) (error "Injected read failure"))
+  (call-next-method))
+
+(test bounded-elementwise-workspace-and-layouts
+  (dolist (size '(0 1 4095 4096 4097 8193))
+    (let* ((a (wrapped (make-list size :initial-element 3f0) (list size)))
+           (out (ct:zeros (list size)))
+           (*allocation-shapes* nil) (*record-allocations* t))
+      (ct:add! out a a)
+      (is (every (lambda (x) (= x 6f0)) (values-of out)))
+      (is (= 3 (length *allocation-shapes*)))
+      (is (= (if (> size 4096) 1 3) (count (list size) *allocation-shapes* :test #'equal)))
+      (is (every (lambda (shape) (<= (first shape) 4096))
+                 (remove (list size) *allocation-shapes* :test #'equal :count 1)))))
+  (let* ((a (wrapped '(1f0 2f0 3f0 4f0 5f0 6f0) '(2 3)))
+         (storage (ct:tensor-storage a))
+         (reversed (ct:make-tensor-view storage '(2 3) :strides '(-3 -1) :offset 5))
+         (out (ct:make-tensor-view storage '(2 3) :strides '(1 2))))
+    (ct:add! out reversed (ct:from-data '((10 20 30))))
+    (is (equalp '(16f0 25f0 34f0 13f0 22f0 31f0) (values-of out))))
+  (let* ((a (wrapped '(1f0 2f0 3f0 4f0 5f0 6f0) '(6)))
+         (input (ct:make-tensor-view (ct:tensor-storage a) '(5)))
+         (out (ct:make-tensor-view (ct:tensor-storage a) '(5) :offset 1)))
+    (ct:add! out input 10)
+    (is (equalp '(1f0 11f0 12f0 13f0 14f0 15f0) (values-of a))))
+  (let* ((a (wrapped '(2f0) nil))
+         (out (wrapped '(0f0) nil)))
+    (ct:multiply! out a 3)
+    (is (= 6f0 (ct:tref out)))))
+
+(test bounded-elementwise-families
+  (let* ((a (wrapped '(1f0 2f0 3f0 4f0) '(2 2)))
+         (ordinary (ct:from-data '((1 2) (3 4))))
+         (mask (ct:compare :lt a 3)))
+    (dolist (operation '(:add :subtract :multiply :divide :min :max))
+      (let ((function (symbol-function (find-symbol (string operation) :cl-tensor))))
+        (is (equalp (values-of (funcall function ordinary 2)) (values-of (funcall function a 2))))))
+    (dolist (operation '(:negate :abs :sqrt :reciprocal :log :tanh :sigmoid))
+      (let ((function (symbol-function (find-symbol (string operation) :cl-tensor))))
+        (is (equalp (values-of (funcall function ordinary)) (values-of (funcall function a))))))
+    (is (equalp '(1 1 0 0) (values-of mask)))
+    (is (equalp '(1f0 2f0 9f0 9f0) (values-of (ct:select mask a 9))))
+    (is (equalp '(2f0 2f0 3f0 3f0) (values-of (ct:clamp a 2 3))))))
+
+(test bounded-fallback-validation-and-failure-atomicity
+  (let* ((storage (make-instance 'failing-storage :data (make-array 8193 :element-type 'single-float
+                                                                 :initial-element 2f0) :fail-at 5000))
+         (a (ct:make-tensor-view storage '(8193)))
+         (out (ct:full '(8193) 7)))
+    (signals error (ct:add! (ct:zeros '(2)) a a))
+    (signals error (ct:add! (ct:zeros '(8193) :dtype :f64) a a))
+    (signals error (ct:add! out a (ct:zeros '(8193) :dtype :f64)))
+    (is (= 0 (reads storage)))
+    (signals error (ct:add! out a a))
+    (is (every (lambda (x) (= x 7f0)) (values-of out))))
+  ;; ECL's compiled calls bypass SYMBOL-FUNCTION replacement.
+  #+sbcl
+  (let* ((a (wrapped (make-list 8193 :initial-element 2f0) '(8193)))
+         (out (ct:full '(8193) 7))
+         (original (symbol-function 'ct::run-nd)) (calls 0))
+    (unwind-protect
+         (progn
+           (setf (symbol-function 'ct::run-nd)
+                 (lambda (&rest arguments)
+                   (when (= (incf calls) 2) (error "Injected kernel failure"))
+                   (apply original arguments)))
+           (signals error (ct:add! out a a)))
+      (setf (symbol-function 'ct::run-nd) original))
+    (is (= 2 calls))
+    (is (every (lambda (x) (= x 7f0)) (values-of out)))))
+
+(test direct-opaque-execution-and-decline
+  (let* ((a (example:make-packed '(4) '(1 2 3 4)))
+         (out (ct:zeros '(4) :dtype :example-packed8))
+         (*record-allocations* t) (*allocation-shapes* nil))
+    (is (eq out (ct:negate! out a)))
+    (is (null *allocation-shapes*))
+    (is (equalp '(-1f0 -2f0 -3f0 -4f0) (values-of (ct:dequantize out))))
+    (setf *allocation-shapes* nil)
+    (is (eq a (ct:negate! a a)))
+    (is (null *allocation-shapes*)))
+  (let* ((a (example:make-packed '(6) '(1 2 3 4 5 6)))
+         (input (ct:slice a :selectors '((0 4))))
+         (out (ct:slice a :selectors '((2 6))))
+         (*record-allocations* t) (*allocation-shapes* nil))
+    (ct:negate! out input)
+    (is (equal '((4)) *allocation-shapes*))
+    (is (equalp '(1f0 2f0 -1f0 -2f0 -3f0 -4f0) (values-of (ct:dequantize a)))))
+  (let ((input (example:make-packed '(4) '(1 2 3 -128)))
+        (out (example:make-packed '(4) '(7 7 7 7))))
+    (signals error (ct:negate! out input))
+    (is (equalp '(7f0 7f0 7f0 7f0) (values-of (ct:dequantize out))))))
+
+(defvar *direct-mode* nil)
+(defvar *direct-selections* 0)
+(defvar *direct-executions* 0)
+(defclass direct-test-dtype (ct:dtype) ())
+
+(defmethod ct:resolve-operation ((dtype direct-test-dtype) operation inputs options)
+  (declare (ignore dtype operation inputs options))
+  (values :f32
+          (lambda (out inputs options)
+            (declare (ignore inputs options))
+            (incf *direct-executions*)
+            (setf (ct:tref out 0) 99f0)
+            (error "Injected staged executor failure"))
+          (if (eq *direct-mode* :malformed-selector) 42
+              (lambda (out inputs options)
+                (declare (ignore out inputs options))
+                (incf *direct-selections*)
+                (case *direct-mode* (:malformed-executor 42) (t nil))))))
+
+(ct:register-dtype
+ (or (ignore-errors (ct:find-dtype :example-direct-test))
+     (make-instance 'direct-test-dtype :name :example-direct-test :element-type 'single-float
+                                      :block-bytes 4 :zero 0f0)))
+
+(test direct-selector-validation-and-staged-failure
+  (let ((a (ct:zeros '(2) :dtype :example-direct-test)) (out (ct:full '(2) 7))
+        (*direct-selections* 0) (*direct-executions* 0))
+    (signals error (ct:add! (ct:zeros '(3)) a a))
+    (signals error (ct:add! (ct:zeros '(2) :dtype :f64) a a))
+    (signals error (ct:add! (ct:make-tensor-view (ct:tensor-storage out) '(2) :strides '(0)) a a))
+    (signals error (ct:add! (wrapped '(0f0 0f0) '(2) :writable nil) a a))
+    (is (= 0 *direct-selections*))
+    (is (= 0 *direct-executions*))
+    (dolist (*direct-mode* '(:malformed-selector :malformed-executor))
+      (signals error (ct:add! out a a))
+      (is (equalp '(7f0 7f0) (values-of out)))
+      (is (= 0 *direct-executions*)))
+    (signals error (ct:add! out a a))
+    (is (= 1 *direct-executions*))
+    (is (equalp '(7f0 7f0) (values-of out)))))
+
+(defclass typed-wrapped-storage (wrapped-storage) ())
+(defmethod ct:storage-element-type ((storage typed-wrapped-storage))
+  (array-element-type (wrapped-data storage)))
+
+(test bounded-fallback-dtypes
+  (dolist (dtype '(:f32 :f64 :s8 :u8 :s16 :u16 :s32 :u32 :s64 :u64 :c32 :c64))
+    (let* ((ordinary (ct:full '(4097) 2 :dtype dtype))
+           (a (ct:make-tensor-view (make-instance 'typed-wrapped-storage :data (ct:tensor-storage ordinary))
+                                   '(4097) :dtype dtype))
+           (out (ct:zeros '(4097) :dtype dtype)))
+      (ct:add! out a a)
+      (is (every (lambda (x) (= x 4)) (values-of out)))
+      (is (equalp (values-of (ct:abs ordinary)) (values-of (ct:abs a))))))
+  (let* ((mask (ct:make-tensor-view
+                (make-instance 'typed-wrapped-storage
+                               :data (ct:tensor-storage (ct:full '(4097) 1 :dtype :u8)))
+                '(4097) :dtype :u8))
+         (out (wrapped (make-list 4097 :initial-element 0f0) '(4097))))
+    (ct:select! out mask 3 9)
+    (is (every (lambda (x) (= x 3f0)) (values-of out)))))
+
+(test opaque-storage-geometry-and-hidden-aliases
+  (signals error
+    (ct:make-tensor-view
+     (make-instance 'example:packed-storage
+                    :codes (make-array 4 :element-type '(signed-byte 8) :initial-element 1)
+                    :scales (make-array 1 :element-type 'single-float :initial-element 1f0)) '(4)))
+  (let* ((base (example:make-packed '(6) '(1 2 3 4 5 6)))
+         (storage (ct:tensor-storage base))
+         (wrapper (make-instance 'example:packed-storage :codes (example::codes storage)
+                                                         :scales (example::scales storage)))
+         (input (ct:make-tensor-view storage '(4)))
+         (out (ct:make-tensor-view wrapper '(4) :offset 2)))
+    (is (null (example::select-direct-negate out (list input) nil)))
+    (ct:negate! out input)
+    (is (equalp '(1f0 2f0 -1f0 -2f0 -3f0 -4f0) (values-of (ct:dequantize base))))))
+
+(test operation-table-direct-layouts
+  (let* ((descriptor
+           (or (ignore-errors (ct:find-dtype :example-direct-table))
+               (ct:register-dtype
+                (make-instance 'ct:dtype :name :example-direct-table :element-type 'single-float
+                               :zero 0f0 :block-bytes 4
+                               :operations
+                               (list :add
+                                     (lambda (dtype operation inputs options)
+                                       (declare (ignore dtype operation inputs options))
+                                       (let ((executor (lambda (out inputs options)
+                                                         (declare (ignore inputs options))
+                                                         (dotimes (i (ct:tensor-size out))
+                                                           (setf (ct:tref out i) 7f0)))))
+                                         (values :f32 executor
+                                                 (lambda (out inputs options)
+                                                   (declare (ignore inputs options))
+                                                   (when (typep (ct:tensor-storage out) '(simple-array single-float (*)))
+                                                     executor))))))))))
+         (a (ct:zeros '(2) :dtype (ct:dtype-name descriptor)))
+         (base (ct:full '(6) 9)))
+    (dolist (layout '(((-1) 3) ((2) 1)))
+      (destructuring-bind (strides offset) layout
+        (let ((out (ct:make-tensor-view (ct:tensor-storage base) '(2) :strides strides :offset offset))
+              (*allocation-shapes* nil) (*record-allocations* t))
+          (is (eq out (ct:add! out a (ct:ones '(2)))))
+          (is (equalp '(7f0 7f0) (values-of out)))
+          (is (equal '((2)) *allocation-shapes*)))))))

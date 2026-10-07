@@ -35,7 +35,7 @@ Run three baseline/protocol pairs serially, without other benchmarks or test com
 
 ## Limitations
 
-- Full-result extension staging and custom-storage input packing are not measured here. Their workspace costs are tracked in [#32](https://todo.sr.ht/~takeiteasy/cl-tensor/32).
+- This comparison covers ordinary backend storage. See [staging measurements](extensions-staging-performance.md) for direct execution and custom storage; remaining full-input adapters are tracked in [#33](https://todo.sr.ht/~takeiteasy/cl-tensor/33).
 
 [^measurement]: These are local measurements, not cross-platform performance guarantees. Short addition's relative overhead is about 10.7%, with an absolute increase of 0.194 µs. Allocation counters are approximate; the matmul harness samples at most 100 calls, so allocation-region granularity affects per-call figures.
 [^registry]: Loading a snapshot ASD alone can still let startup configuration select the working checkout. Isolation and source-directory verification prevent accidentally measuring the same implementation twice.

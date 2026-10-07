@@ -32,7 +32,7 @@ A view is valid when:
 
 ## Extension points
 
-Dtypes are registered CLOS descriptors. Storage kinds implement logical length, type and optional scalar access. Numerical operations select a dtype method before built-in execution; accepted extension out-forms stage independent results and copy through the dtype protocol. See [dtype and storage extensions](extensions.md).
+Dtypes are registered CLOS descriptors. Storage kinds implement logical length, type and optional scalar access. Numerical operations select a dtype method before built-in execution; accepted extension out-forms stage independent results and copy through the dtype protocol, or use an explicitly selected alias-safe, failure-atomic direct executor. See [dtype and storage extensions](extensions.md).
 
 Autograd attaches through a wrapper around a tensor, or through a subtype defined with `(:include tensor)`. Code that accepts a `tensor` accepts both.
 

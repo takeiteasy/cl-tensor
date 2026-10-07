@@ -1,0 +1,68 @@
+This is SBCL 2.6.8, an implementation of ANSI Common Lisp.
+More information about SBCL is available at <http://www.sbcl.org/>.
+
+SBCL is free software, provided as is, with absolutely no warranty.
+It is mostly in the public domain; some portions are provided under
+BSD-style licenses.  See the CREDITS and COPYING files in the
+distribution for more information.
+SBCL 2.6.8, source /private/tmp/cl-tensor-32-before/, backend NATIVE
+Case us/call bytes/call
+1024 wrapped-contiguous 153.322 10433.
+1024 wrapped-reverse 154.598 10433.
+1024 wrapped-stride2 156.176 10433.
+1024 wrapped-broadcast 155.361 10433.
+1024 wrapped-overlap 173.422 10433.
+1024 opaque-disjoint 31.993 3514.
+1024 opaque-exact-alias 31.869 3514.
+1024 opaque-declined-shift 31.842 3514.
+65536 wrapped-contiguous 9634.250 524320.
+65536 wrapped-reverse 9787.625 524320.
+65536 wrapped-stride2 9729.375 524320.
+65536 wrapped-broadcast 9745.875 524320.
+65536 wrapped-overlap 10754.875 524320.
+65536 opaque-disjoint 1976.688 192859.
+65536 opaque-exact-alias 1984.438 192859.
+65536 opaque-declined-shift 1972.156 192859.
+262144 wrapped-contiguous 38923.500 2097184.
+262144 wrapped-reverse 38721.500 2097184.
+262144 wrapped-stride2 38660.500 2097184.
+262144 wrapped-broadcast 37539.500 2097184.
+262144 wrapped-overlap 41310.500 2097184.
+262144 opaque-disjoint 7580.500 786464.
+262144 opaque-exact-alias 7691.250 786464.
+262144 opaque-declined-shift 7585.000 786464.
+SBCL 2.6.8, backend NATIVE
+1024 contiguous: 2.064 us/call, 1886.8 bytes/call
+1024 transpose: 3.383 us/call, 1949.1 bytes/call
+1024 stride2: 3.200 us/call, 1886.8 bytes/call
+1024 reverse: 3.314 us/call, 1916.4 bytes/call
+1024 broadcast: 2.332 us/call, 1949.1 bytes/call
+65536 contiguous: 10.257 us/call, 1867.1 bytes/call
+65536 transpose: 89.838 us/call, 1932.8 bytes/call
+65536 stride2: 84.182 us/call, 1867.1 bytes/call
+65536 reverse: 84.446 us/call, 1883.6 bytes/call
+65536 broadcast: 16.270 us/call, 1932.8 bytes/call
+SBCL 2.6.8 ARM64
+Implementation Backend Dtype Layout us/call Lisp-bytes/call
+current LISP F32 MATRIX-3X2 3.726 3276.
+current LISP F32 MATRIX-9X8 7.800 8513.
+current LISP F32 INTERLEAVED-MATRICES 138.039 141317.
+current LISP F32 INTERLEAVED-BATCHES 106.096 106541.
+current LISP F32 CONTIGUOUS-CONTROL 32.578 2620.
+current LISP F64 MATRIX-3X2 3.716 3276.
+current LISP F64 MATRIX-9X8 7.786 8516.
+current LISP F64 INTERLEAVED-MATRICES 137.061 141449.
+current LISP F64 INTERLEAVED-BATCHES 104.869 106539.
+current LISP F64 CONTIGUOUS-CONTROL 31.714 2621.
+current NATIVE F32 MATRIX-3X2 3.800 3276.
+current NATIVE F32 MATRIX-9X8 7.625 8516.
+current NATIVE F32 INTERLEAVED-MATRICES 137.232 141453.
+current NATIVE F32 INTERLEAVED-BATCHES 99.125 106594.
+current NATIVE F32 CONTIGUOUS-CONTROL 25.420 2620.
+current NATIVE F64 MATRIX-3X2 3.833 3276.
+current NATIVE F64 MATRIX-9X8 7.555 8515.
+current NATIVE F64 INTERLEAVED-MATRICES 128.531 141484.
+current NATIVE F64 INTERLEAVED-BATCHES 99.369 106630.
+current NATIVE F64 CONTIGUOUS-CONTROL 23.152 3276.
+proof SMALL 0.977 us/call 0. Lisp-bytes/call
+proof LARGE 0.985 us/call 0. Lisp-bytes/call

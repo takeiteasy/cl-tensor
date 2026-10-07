@@ -1,0 +1,137 @@
+This is SBCL 2.6.8, an implementation of ANSI Common Lisp.
+More information about SBCL is available at <http://www.sbcl.org/>.
+
+SBCL is free software, provided as is, with absolutely no warranty.
+It is mostly in the public domain; some portions are provided under
+BSD-style licenses.  See the CREDITS and COPYING files in the
+distribution for more information.
+; compiling file "/Users/george/git/cl-tensor/elementwise.lisp" (written 07 OCT 2026 05:05:18 PM):
+
+; wrote /private/tmp/cl-tensor-ticket32-cache/Users/george/git/cl-tensor/elementwise-tmpGHU3ALSV.fasl
+; compilation finished in 0:00:00.071
+; compiling file "/Users/george/git/cl-tensor/shape.lisp" (written 07 OCT 2026 04:33:12 PM):
+
+; wrote /private/tmp/cl-tensor-ticket32-cache/Users/george/git/cl-tensor/shape-tmpAAURSO1.fasl
+; compilation finished in 0:00:00.042
+; compiling file "/Users/george/git/cl-tensor/reductions.lisp" (written 07 OCT 2026 04:33:12 PM):
+
+; wrote /private/tmp/cl-tensor-ticket32-cache/Users/george/git/cl-tensor/reductions-tmp5GEXGEG5.fasl
+; compilation finished in 0:00:00.417
+; compiling file "/Users/george/git/cl-tensor/normalization.lisp" (written 07 OCT 2026 04:26:30 PM):
+
+; file: /Users/george/git/cl-tensor/normalization.lisp
+; in: DEFINE-NORMALIZATION-ROWS
+;     (CL-TENSOR::DEFINE-NORMALIZATION-ROWS)
+; --> DEFUN PROGN SB-IMPL::%DEFUN SB-IMPL::%DEFUN SB-INT:NAMED-LAMBDA FUNCTION
+; --> BLOCK LET MACROLET ECASE COND IF IF PROGN LET /
+; ==>
+;   (SQRT
+;    (+ CL-TENSOR::EPSILON
+;       (COERCE (/ CL-TENSOR::TOTAL CL-TENSOR::WIDTH) 'SINGLE-FLOAT)))
+;
+; note: unable to
+;   optimize
+; due to type uncertainty:
+;   The result is a (VALUES (OR (COMPLEX SINGLE-FLOAT) (SINGLE-FLOAT 0.0))
+;                           &OPTIONAL), not a (VALUES FLOAT &REST T).
+;
+; note: unable to
+;   optimize
+; due to type uncertainty:
+;   The result is a (VALUES (OR (COMPLEX SINGLE-FLOAT) (SINGLE-FLOAT 0.0))
+;                           &OPTIONAL), not a (VALUES FLOAT &REST T).
+
+; ==>
+;   (SQRT
+;    (+ CL-TENSOR::EPSILON
+;       (COERCE (/ CL-TENSOR::TOTAL CL-TENSOR::WIDTH) 'DOUBLE-FLOAT)))
+;
+; note: unable to
+;   optimize
+; due to type uncertainty:
+;   The result is a (VALUES (OR (COMPLEX DOUBLE-FLOAT) (DOUBLE-FLOAT 0.0d0))
+;                           &OPTIONAL), not a (VALUES FLOAT &REST T).
+
+
+; wrote /private/tmp/cl-tensor-ticket32-cache/Users/george/git/cl-tensor/normalization-tmpAR3FSGEY.fasl
+; compilation finished in 0:00:00.044
+; compiling file "/Users/george/git/cl-tensor/matmul.lisp" (written 07 OCT 2026 04:31:56 PM):
+
+; wrote /private/tmp/cl-tensor-ticket32-cache/Users/george/git/cl-tensor/matmul-tmpJAIDFZTC.fasl
+; compilation finished in 0:00:00.027
+;
+; compilation unit finished
+;   printed 3 notes
+
+; file: /Users/george/git/cl-tensor/examples/extensions.lisp
+; in: DEFUN SELECT-DIRECT-NEGATE
+;     #'CL-TENSOR/EXTENSION-EXAMPLE::DIRECT-NEGATE
+;
+; caught STYLE-WARNING:
+;   undefined function: CL-TENSOR/EXTENSION-EXAMPLE::DIRECT-NEGATE
+;
+; compilation unit finished
+;   Undefined function:
+;     DIRECT-NEGATE
+;   caught 1 STYLE-WARNING condition
+SBCL 2.6.8, source /Users/george/git/cl-tensor/, backend NATIVE
+Case us/call bytes/call
+1024 wrapped-contiguous 124.621 10689.
+1024 wrapped-reverse 123.410 10689.
+1024 wrapped-stride2 123.109 10689.
+1024 wrapped-broadcast 123.557 10689.
+1024 wrapped-overlap 135.523 10689.
+1024 opaque-disjoint 2.418 262.
+1024 opaque-exact-alias 2.344 262.
+1024 opaque-declined-shift 31.176 3514.
+65536 wrapped-contiguous 7640.875 303102.
+65536 wrapped-reverse 7765.875 303102.
+65536 wrapped-stride2 7702.375 303102.
+65536 wrapped-broadcast 7615.625 303102.
+65536 wrapped-overlap 8474.750 303102.
+65536 opaque-disjoint 125.551 256.
+65536 opaque-exact-alias 123.197 256.
+65536 opaque-declined-shift 1981.562 192859.
+262144 wrapped-contiguous 32080.500 1146888.
+262144 wrapped-reverse 32488.500 1146888.
+262144 wrapped-stride2 32321.500 1146888.
+262144 wrapped-broadcast 31787.500 1146888.
+262144 wrapped-overlap 35353.000 1146888.
+262144 opaque-disjoint 519.813 0.
+262144 opaque-exact-alias 512.141 0.
+262144 opaque-declined-shift 7670.625 786464.
+SBCL 2.6.8, backend NATIVE
+1024 contiguous: 1.997 us/call, 1886.8 bytes/call
+1024 transpose: 3.381 us/call, 1949.1 bytes/call
+1024 stride2: 3.178 us/call, 1886.8 bytes/call
+1024 reverse: 3.307 us/call, 1916.4 bytes/call
+1024 broadcast: 2.308 us/call, 1949.1 bytes/call
+65536 contiguous: 10.251 us/call, 1867.1 bytes/call
+65536 transpose: 89.806 us/call, 1932.8 bytes/call
+65536 stride2: 84.206 us/call, 1867.1 bytes/call
+65536 reverse: 84.409 us/call, 1883.6 bytes/call
+65536 broadcast: 16.306 us/call, 1932.8 bytes/call
+SBCL 2.6.8 ARM64
+Implementation Backend Dtype Layout us/call Lisp-bytes/call
+current LISP F32 MATRIX-3X2 3.712 3276.
+current LISP F32 MATRIX-9X8 7.828 8513.
+current LISP F32 INTERLEAVED-MATRICES 137.943 141317.
+current LISP F32 INTERLEAVED-BATCHES 106.029 106541.
+current LISP F32 CONTIGUOUS-CONTROL 32.814 2620.
+current LISP F64 MATRIX-3X2 3.705 3276.
+current LISP F64 MATRIX-9X8 7.770 8516.
+current LISP F64 INTERLEAVED-MATRICES 136.463 141449.
+current LISP F64 INTERLEAVED-BATCHES 104.807 106539.
+current LISP F64 CONTIGUOUS-CONTROL 31.625 2621.
+current NATIVE F32 MATRIX-3X2 3.817 3276.
+current NATIVE F32 MATRIX-9X8 7.545 8516.
+current NATIVE F32 INTERLEAVED-MATRICES 139.729 141453.
+current NATIVE F32 INTERLEAVED-BATCHES 98.770 106594.
+current NATIVE F32 CONTIGUOUS-CONTROL 25.250 2620.
+current NATIVE F64 MATRIX-3X2 3.864 3276.
+current NATIVE F64 MATRIX-9X8 7.554 8515.
+current NATIVE F64 INTERLEAVED-MATRICES 128.670 141484.
+current NATIVE F64 INTERLEAVED-BATCHES 99.238 106630.
+current NATIVE F64 CONTIGUOUS-CONTROL 23.046 3276.
+proof SMALL 0.971 us/call 0. Lisp-bytes/call
+proof LARGE 0.977 us/call 0. Lisp-bytes/call

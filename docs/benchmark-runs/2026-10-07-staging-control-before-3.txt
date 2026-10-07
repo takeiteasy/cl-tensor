@@ -1,0 +1,42 @@
+This is SBCL 2.6.8, an implementation of ANSI Common Lisp.
+More information about SBCL is available at <http://www.sbcl.org/>.
+
+SBCL is free software, provided as is, with absolutely no warranty.
+It is mostly in the public domain; some portions are provided under
+BSD-style licenses.  See the CREDITS and COPYING files in the
+distribution for more information.
+SBCL 2.6.8, backend NATIVE
+1024 contiguous: 2.012 us/call, 1886.8 bytes/call
+1024 transpose: 3.411 us/call, 1949.1 bytes/call
+1024 stride2: 3.171 us/call, 1886.8 bytes/call
+1024 reverse: 3.342 us/call, 1916.4 bytes/call
+1024 broadcast: 2.327 us/call, 1949.1 bytes/call
+65536 contiguous: 10.253 us/call, 1867.1 bytes/call
+65536 transpose: 87.401 us/call, 1932.8 bytes/call
+65536 stride2: 84.221 us/call, 1867.1 bytes/call
+65536 reverse: 84.408 us/call, 1883.6 bytes/call
+65536 broadcast: 16.318 us/call, 1932.8 bytes/call
+SBCL 2.6.8 ARM64
+Implementation Backend Dtype Layout us/call Lisp-bytes/call
+current LISP F32 MATRIX-3X2 3.750 3276.
+current LISP F32 MATRIX-9X8 8.075 8513.
+current LISP F32 INTERLEAVED-MATRICES 143.088 141317.
+current LISP F32 INTERLEAVED-BATCHES 109.766 106541.
+current LISP F32 CONTIGUOUS-CONTROL 33.760 2620.
+current LISP F64 MATRIX-3X2 3.699 3276.
+current LISP F64 MATRIX-9X8 7.815 8516.
+current LISP F64 INTERLEAVED-MATRICES 137.104 141449.
+current LISP F64 INTERLEAVED-BATCHES 105.525 106539.
+current LISP F64 CONTIGUOUS-CONTROL 33.752 2621.
+current NATIVE F32 MATRIX-3X2 3.792 3276.
+current NATIVE F32 MATRIX-9X8 7.578 8516.
+current NATIVE F32 INTERLEAVED-MATRICES 130.754 141453.
+current NATIVE F32 INTERLEAVED-BATCHES 98.979 106594.
+current NATIVE F32 CONTIGUOUS-CONTROL 25.306 2620.
+current NATIVE F64 MATRIX-3X2 3.836 3276.
+current NATIVE F64 MATRIX-9X8 7.546 8515.
+current NATIVE F64 INTERLEAVED-MATRICES 128.877 141484.
+current NATIVE F64 INTERLEAVED-BATCHES 98.902 106630.
+current NATIVE F64 CONTIGUOUS-CONTROL 23.112 3276.
+proof SMALL 0.967 us/call 0. Lisp-bytes/call
+proof LARGE 0.981 us/call 0. Lisp-bytes/call

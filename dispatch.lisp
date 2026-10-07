@@ -18,7 +18,7 @@
       (let ((out (make-tensor (tensor-shape input) :dtype (tensor-dtype input))))
         (copy-storage! (find-dtype (tensor-dtype input)) out input))))
 
-(defun dispatch-operation (operation out inputs options shape-function fallback &optional delegate-p)
+(defun dispatch-operation (operation out inputs options shape-function fallback &optional delegate-p storage-fallback)
   (let ((tensors nil) (names nil))
     (dolist (input inputs)
       (when (tensorp input)
@@ -27,17 +27,25 @@
     (when (getf options :dtype) (pushnew (getf options :dtype) names))
     (setf names (nreverse names) tensors (nreverse tensors))
     (dolist (name names)
-      (multiple-value-bind (result-name executor)
+      (multiple-value-bind (result-name executor direct-selector)
           (resolve-operation (find-dtype name) operation inputs options)
         (when result-name
           (find-dtype result-name)
           (unless (functionp executor) (error "Operation selector must return an executor"))
+          (unless (or (null direct-selector) (functionp direct-selector))
+            (error "Direct selector must be a function or NIL"))
           (when (and (member operation '(:convert :dequantize))
                      (not (eq result-name (getf options :dtype))))
             (error "Conversion hook must return the requested dtype"))
           (let ((shape (funcall shape-function)))
             (when out (check-copy-destination out shape result-name))
-            ;; TODO: O(output size) staging; add bounded or alias-safe execution (#32).
+            (when (and out direct-selector)
+              (let ((direct (funcall direct-selector out inputs options)))
+                (unless (or (null direct) (functionp direct))
+                  (error "Direct selector must return an executor or NIL"))
+                (when direct
+                  (funcall direct out inputs options)
+                  (return-from dispatch-operation out))))
             (let ((result (make-tensor shape :dtype result-name)))
               (funcall executor result inputs options)
               (return-from dispatch-operation
@@ -56,7 +64,9 @@
           (dolist (tensor tensors)
             (unless (storage-readable-p (tensor-storage tensor))
               (error 'unsupported-storage-access :storage (tensor-storage tensor) :access :read)))
-          ;; TODO: O(input size) packing; add bounded storage adapters (#32).
+          (when storage-fallback
+            (return-from dispatch-operation (funcall storage-fallback operation out inputs options)))
+          ;; TODO: O(input size) packing; add operation-specific bounded adapters (#33).
           (let* ((target (when out (make-tensor (tensor-shape out) :dtype (tensor-dtype out))))
                  (result (funcall fallback target (mapcar #'pack-backend-input inputs))))
             (if out (copy-storage! (find-dtype (tensor-dtype out)) out result) result))))))

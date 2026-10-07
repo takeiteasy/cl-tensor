@@ -1,0 +1,73 @@
+(require :asdf)
+(asdf:load-system :cl-tensor)
+(load (merge-pathnames "examples/extensions.lisp" (asdf:system-source-directory :cl-tensor)))
+
+(defpackage #:cl-tensor/extensions-bench
+  (:use #:cl)
+  (:local-nicknames (#:ct #:cl-tensor) (#:example #:cl-tensor/extension-example)))
+
+(in-package #:cl-tensor/extensions-bench)
+
+(defclass wrapped-storage () ((data :initarg :data :reader data)))
+(defmethod ct:storage-length ((storage wrapped-storage)) (length (data storage)))
+(defmethod ct:storage-element-type ((storage wrapped-storage)) 'single-float)
+(defmethod ct:storage-readable-p ((storage wrapped-storage)) t)
+(defmethod ct:storage-writable-p ((storage wrapped-storage)) t)
+(defmethod ct:storage-ref ((storage wrapped-storage) index) (aref (data storage) index))
+(defmethod (setf ct:storage-ref) (value (storage wrapped-storage) index)
+  (setf (aref (data storage) index) value))
+
+(defun wrapped (values shape)
+  (ct:make-tensor-view (make-instance 'wrapped-storage
+                                    :data (make-array (length values) :element-type 'single-float
+                                                      :initial-contents values)) shape))
+
+(defun measure (name function)
+  (dotimes (i 10) (funcall function))
+  (let ((iterations 1))
+    (loop
+      (let ((start (get-internal-real-time)))
+        (dotimes (i iterations) (funcall function))
+        (when (>= (- (get-internal-real-time) start) (* 0.05 internal-time-units-per-second)) (return)))
+      (setf iterations (* iterations 2)))
+    (let ((times (loop repeat 3 collect
+                      (let ((start (get-internal-real-time)))
+                        (dotimes (i iterations) (funcall function))
+                        (* 1d6 (/ (- (get-internal-real-time) start)
+                                  internal-time-units-per-second iterations)))))
+          (count (min iterations 1000)))
+      #+sbcl (sb-ext:gc :full t)
+      (let ((before #+sbcl (sb-ext:get-bytes-consed) #-sbcl 0))
+        (dotimes (i count) (funcall function))
+        (format t "~A ~,3F ~A~%" name (second (sort times #'<))
+                #+sbcl (format nil "~,0F" (/ (- (sb-ext:get-bytes-consed) before) (float count 1d0)))
+                #-sbcl "n/a")))))
+
+(format t "~A ~A, source ~A, backend ~A~%Case us/call bytes/call~%"
+        (lisp-implementation-type) (lisp-implementation-version)
+        (asdf:system-source-directory :cl-tensor) (trivial-simd:backend))
+(dolist (size '(1024 65536 262144))
+  (let* ((a (wrapped (make-list size :initial-element 2f0) (list size)))
+         (out (ct:zeros (list size)))
+         (reverse (ct:make-tensor-view (ct:tensor-storage out) (list size)
+                                      :strides '(-1) :offset (1- size)))
+         (strided (ct:make-tensor-view (ct:tensor-storage (ct:zeros (list (* size 2))))
+                                      (list size) :strides '(2)))
+         (broadcast (ct:make-tensor-view (ct:tensor-storage a) (list size) :strides '(0))))
+    (dolist (case (list (list "wrapped-contiguous" out a) (list "wrapped-reverse" reverse a)
+                       (list "wrapped-stride2" strided a) (list "wrapped-broadcast" out broadcast)
+                       (list "wrapped-overlap" a a)))
+      (destructuring-bind (name destination input) case
+        (ct:add! destination input 0)
+        (assert (= 2f0 (ct:tref destination 0)))
+        (measure (format nil "~D ~A" size name) (lambda () (ct:add! destination input 0)))))
+    (let* ((input (example:make-packed (list size) (make-list size :initial-element 2)))
+           (destination (ct:zeros (list size) :dtype :example-packed8)))
+      (ct:negate! destination input)
+      (assert (= -2f0 (ct:tref (ct:dequantize destination) 0)))
+      (measure (format nil "~D opaque-disjoint" size) (lambda () (ct:negate! destination input)))
+      (measure (format nil "~D opaque-exact-alias" size) (lambda () (ct:negate! input input)))
+      (let* ((base (example:make-packed (list (+ size 2)) (make-list (+ size 2) :initial-element 2)))
+             (source (ct:slice base :selectors (list (list 0 size))))
+             (target (ct:slice base :selectors (list (list 2 (+ size 2))))))
+        (measure (format nil "~D opaque-declined-shift" size) (lambda () (ct:negate! target source)))))))
