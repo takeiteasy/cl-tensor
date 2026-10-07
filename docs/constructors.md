@@ -2,6 +2,8 @@
 
 Constructors return independent, row-major contiguous tensors with dtype `:f32` unless specified. Shapes are lists or vectors of non-negative integers; `nil` is a scalar shape and a zero dimension makes the tensor empty.
 
+[Custom dtypes](extensions.md) allocate through their storage method. Scalar value constructors require writable storage; opaque storage supplies allocation and copying without scalar access.
+
 ## Filled tensors and data
 
 | Call | Result |

@@ -1,6 +1,6 @@
 # Matrix multiplication
 
-`matmul` multiplies vectors, matrices and batches into an independent contiguous tensor. `(matmul! out a b)` writes the result into `out` and returns it. Both operands must be tensors with matching `:f32` or `:f64` dtypes; use [astype](conversion.md) for explicit conversion.
+`matmul` multiplies vectors, matrices and batches into an independent contiguous tensor. `(matmul! out a b)` writes the result into `out` and returns it. Both operands are tensors. Built-in kernels require matching `:f32` or `:f64` dtypes; use [astype](conversion.md) for explicit conversion. [Extension methods](extensions.md) can accept mixed input dtypes and select the result dtype.
 
 ## Shapes
 
@@ -40,6 +40,8 @@ The destination must match the result shape and dtype exactly. Padded, transpose
 An empty output performs no writes but still validates operands, shapes and dtype. A zero contraction dimension produces typed zeros, including a zero for an empty vector dot product.
 
 ## Execution
+
+The following execution details describe built-in storage and dtypes. Extension methods compute into independent result storage and copy to supplied destinations; readable custom storage with a built-in dtype uses packed backend fallback.
 
 Vectors use BLAS dot and matrix-vector routines; matrix products use stride-aware GEMM views over their backing storage. Transposed, reversed, padded and zero-stride input matrices work directly. Compatible batch axes combine into constant-stride runs, with one batched GEMM call per run; broadcast operands use a zero batch stride. A single product uses ordinary GEMM.[^backend]
 

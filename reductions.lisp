@@ -49,7 +49,7 @@
         matrix
         (copy-tensor matrix))))
 
-(defun tensor-reduction (operation tensor out axis keepdims accumulate)
+(defun builtin-tensor-reduction (operation tensor out axis keepdims accumulate)
   (check-type tensor tensor)
   (when out (check-type out tensor))
   (let* ((axes (if (null axis) (loop for a below (tensor-rank tensor) collect a)
@@ -64,7 +64,7 @@
         (when (and (plusp rows) (zerop width)
                    (member operation '(:mean :minimum :maximum :argmin :argmax)))
           (error "Empty reduction groups have no ~S" operation))
-        (when (zerop rows) (return-from tensor-reduction result))
+        (when (zerop rows) (return-from builtin-tensor-reduction result))
         (let* ((input-dtype (if (member operation '(:argmin :argmax)) (tensor-dtype tensor) dtype))
                (input (if (eq input-dtype (tensor-dtype tensor)) tensor (astype tensor input-dtype)))
                ;; TODO: O(output size) scratch; write proven-disjoint outputs directly (#27).
@@ -94,6 +94,22 @@
                                  (setf (storage-ref (tensor-storage result) index) (aref values position))
                                  (incf position)))))
           result)))))
+
+(defun tensor-reduction (operation tensor out axis keepdims accumulate)
+  (check-type tensor tensor)
+  (when out (check-type out tensor))
+  (let* ((axes (if (null axis) (loop for a below (tensor-rank tensor) collect a)
+                   (normalize-axes axis (tensor-rank tensor))))
+         (options (list :axis axes :keepdims keepdims :accumulate accumulate)))
+    (dispatch-operation operation out (list tensor) options
+                        (lambda ()
+                          (multiple-value-bind (shape width) (reduction-layout tensor axes keepdims)
+                            (when (and (plusp (reduce #'* shape)) (zerop width)
+                                       (member operation '(:mean :minimum :maximum :argmin :argmax)))
+                              (error "Empty reduction groups have no ~S" operation))
+                            shape))
+                        (lambda (target inputs)
+                          (builtin-tensor-reduction operation (first inputs) target (coerce axes 'vector) keepdims accumulate)))))
 
 (defmacro define-tensor-reduction (name operation &optional accumulation-p)
   (let ((out-name (intern (format nil "~A!" name))))

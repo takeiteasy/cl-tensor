@@ -6,7 +6,11 @@
   dtype)
 
 (defun coerce-value (value dtype)
-  (let ((type (dtype-element-type dtype)))
+  (coerce-scalar (find-dtype dtype) value))
+
+(defmethod coerce-scalar ((descriptor dtype) value)
+  (let ((dtype (dtype-name descriptor))
+        (type (dtype-info-element-type descriptor)))
     (cond ((member dtype '(:f32 :f64))
            (unless (realp value) (error 'type-error :datum value :expected-type 'real))
            (coerce value type))
@@ -48,20 +52,31 @@
 
 (define-foreign-access)
 
-(defun storage-ref (storage index)
-  (if (trivial-simd:vector-view-p storage)
-      (foreign-ref storage index)
-      (aref storage index)))
+(defmethod storage-ref ((storage t) index)
+  (declare (ignore index))
+  (error 'unsupported-storage-access :storage storage :access :read))
 
-(defun (setf storage-ref) (value storage index)
-  (if (trivial-simd:vector-view-p storage)
-      (setf (foreign-ref storage index) value)
-      (setf (aref storage index) value)))
+(defmethod (setf storage-ref) (value (storage t) index)
+  (declare (ignore value index))
+  (error 'unsupported-storage-access :storage storage :access :write))
+
+(defmethod storage-ref ((storage vector) index)
+  (aref storage index))
+
+(defmethod storage-ref ((storage trivial-simd:vector-view) index)
+  (foreign-ref storage index))
+
+(defmethod (setf storage-ref) (value (storage vector) index)
+  (setf (aref storage index) value))
+
+(defmethod (setf storage-ref) (value (storage trivial-simd:vector-view) index)
+  (setf (foreign-ref storage index) value))
 
 (defun tref (tensor &rest indices)
   (storage-ref (tensor-storage tensor) (tensor-index tensor indices)))
 
 (defun (setf tref) (value tensor &rest indices)
+  (require-writable-storage tensor)
   (let ((index (tensor-index tensor indices)))
     (setf (storage-ref (tensor-storage tensor) index)
           (coerce-value value (tensor-dtype tensor))))
@@ -80,13 +95,30 @@
                          do (decf (car tail) (* count (aref strides axis))))))))
     (walk 0)))
 
+(defmethod copy-storage-supported-p ((descriptor dtype) out)
+  (storage-writable-p (tensor-storage out)))
+
+(defmethod copy-storage! ((descriptor dtype) out input)
+  (unless (and (eq (tensor-dtype out) (tensor-dtype input))
+               (equalp (tensor-shape out) (tensor-shape input)))
+    (error "Copy shape and dtype must match"))
+  (unless (copy-storage-supported-p descriptor out)
+    (error 'unsupported-storage-access :storage (tensor-storage out) :access :copy))
+  (unless (storage-readable-p (tensor-storage input))
+    (error 'unsupported-storage-access :storage (tensor-storage input) :access :read))
+  (call-with-offsets (tensor-shape out)
+                     (list (tensor-strides out) (tensor-strides input))
+                     (list (tensor-offset out) (tensor-offset input))
+                     (lambda (target source)
+                       (setf (storage-ref (tensor-storage out) target)
+                             (storage-ref (tensor-storage input) source))))
+  out)
+
 (defun copy-tensor (tensor)
-  (let* ((result (make-tensor (tensor-shape tensor) :dtype (tensor-dtype tensor)))
-         (target (tensor-storage result))
-         (position 0))
-    (call-with-offsets (tensor-shape tensor) (list (tensor-strides tensor))
-                       (list (tensor-offset tensor))
-                       (lambda (index)
-                         (setf (aref target position) (storage-ref (tensor-storage tensor) index))
-                         (incf position)))
-    result))
+  (let ((result (make-tensor (tensor-shape tensor) :dtype (tensor-dtype tensor))))
+    (copy-storage! (find-dtype (tensor-dtype tensor)) result tensor)))
+
+(defun require-writable-storage (tensor)
+  (unless (storage-writable-p (tensor-storage tensor))
+    (error 'unsupported-storage-access :storage (tensor-storage tensor) :access :write))
+  tensor)

@@ -1,0 +1,62 @@
+(in-package #:cl-tensor)
+
+(defun backend-storage-p (storage)
+  (or (typep storage '(simple-array * (*))) (trivial-simd:vector-view-p storage)))
+
+(defun builtin-dtype-p (name)
+  (member (find-dtype name) *builtin-dtypes*))
+
+(defun check-copy-destination (out shape name)
+  (unless (and (equalp shape (tensor-shape out)) (eq name (tensor-dtype out)))
+    (error "Output must have shape ~S and dtype ~S" shape name))
+  (unless (unique-output-p out) (error "Output elements overlap"))
+  (unless (copy-storage-supported-p (find-dtype name) out)
+    (error 'unsupported-storage-access :storage (tensor-storage out) :access :copy)))
+
+(defun pack-backend-input (input)
+  (if (or (not (tensorp input)) (backend-storage-p (tensor-storage input))) input
+      (let ((out (make-tensor (tensor-shape input) :dtype (tensor-dtype input))))
+        (copy-storage! (find-dtype (tensor-dtype input)) out input))))
+
+(defun dispatch-operation (operation out inputs options shape-function fallback &optional delegate-p)
+  (let ((tensors nil) (names nil))
+    (dolist (input inputs)
+      (when (tensorp input)
+        (push input tensors)
+        (pushnew (tensor-dtype input) names)))
+    (when (getf options :dtype) (pushnew (getf options :dtype) names))
+    (setf names (nreverse names) tensors (nreverse tensors))
+    (dolist (name names)
+      (multiple-value-bind (result-name executor)
+          (resolve-operation (find-dtype name) operation inputs options)
+        (when result-name
+          (find-dtype result-name)
+          (unless (functionp executor) (error "Operation selector must return an executor"))
+          (when (and (member operation '(:convert :dequantize))
+                     (not (eq result-name (getf options :dtype))))
+            (error "Conversion hook must return the requested dtype"))
+          (let ((shape (funcall shape-function)))
+            (when out (check-copy-destination out shape result-name))
+            ;; TODO: O(output size) staging; add bounded or alias-safe execution (#32).
+            (let ((result (make-tensor shape :dtype result-name)))
+              (funcall executor result inputs options)
+              (return-from dispatch-operation
+                (if out (copy-storage! (find-dtype result-name) out result) result)))))))
+    (when delegate-p (return-from dispatch-operation (funcall fallback out inputs)))
+    (unless (every #'builtin-dtype-p names)
+      (error 'unsupported-operation :operation operation :dtypes names))
+    (if (every (lambda (tensor) (backend-storage-p (tensor-storage tensor)))
+               (if out (cons out tensors) tensors))
+        (funcall fallback out inputs)
+        (progn
+          (when out
+            (unless (unique-output-p out) (error "Output elements overlap"))
+            (unless (copy-storage-supported-p (find-dtype (tensor-dtype out)) out)
+              (error 'unsupported-storage-access :storage (tensor-storage out) :access :copy)))
+          (dolist (tensor tensors)
+            (unless (storage-readable-p (tensor-storage tensor))
+              (error 'unsupported-storage-access :storage (tensor-storage tensor) :access :read)))
+          ;; TODO: O(input size) packing; add bounded storage adapters (#32).
+          (let* ((target (when out (make-tensor (tensor-shape out) :dtype (tensor-dtype out))))
+                 (result (funcall fallback target (mapcar #'pack-backend-input inputs))))
+            (if out (copy-storage! (find-dtype (tensor-dtype out)) out result) result))))))

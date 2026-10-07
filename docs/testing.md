@@ -17,6 +17,7 @@ sbcl --non-interactive --eval '(require :asdf)' --eval '(asdf:test-system :cl-te
 | `tests/reductions.lisp` | All reducers, dtypes, axes, widening, empty groups, aliases, foreign storage and seeded enumeration |
 | `tests/normalization.lisp` | Softmax, weighted RMSNorm, axis sets, widened sums, empty inputs, arbitrary layouts, aliases and seeded scalar references |
 | `tests/matmul.lisp` | Vector/matrix and batch shapes, direct interleaved destinations, storage sharing and guards, batch dispatch counts, broadcast/reversed runs, empty contractions, aliases, foreign storage and seeded reference products |
+| `tests/extensions.lisp` | External CLOS descriptors, operation tables, opaque block storage, mixed matmul, conversion, fallback, validation and aliases |
 | `tests/random.lisp` | Seeded random shapes, strides, broadcasting and output uniqueness checked against independent Lisp calculations[^seed] |
 
 ## Backends and examples
@@ -34,6 +35,15 @@ Run the constructor, broadcasting, activation, normalization, shape, reduction a
 ```sh
 sbcl --non-interactive --load examples/tensors.lisp
 ```
+
+Run the external dtype/storage example:
+
+```lisp
+(load "examples/extensions.lisp")
+(cl-tensor/extension-example:run-example)
+```
+
+See [extensions](extensions.md) for its public protocol and [dispatch measurements](extensions-performance.md) for the regression comparison.
 
 Measure elementwise time and, on SBCL, allocation:
 
@@ -58,6 +68,19 @@ sbcl --dynamic-space-size 4096 --non-interactive --load tests/matmul-bench.lisp
 ```
 
 See [matmul measurements](matmul-performance.md) for layouts, baseline comparison and retained results.
+
+## Extension protocol validation
+
+SBCL 2.6.8 and ECL execute the full suite and the constructor and extension examples. Recorded run, 2026-10-07:
+
+| Implementation/backend | Passing checks |
+|---|---:|
+| SBCL default/native | 46,909 |
+| SBCL Lisp | 46,879 |
+| ECL | 45,988 |
+| Experimental ARM64 CCL | 31,358; subject to the [CCL limitation](#limitations) |
+
+The extension checks cover public-interface-only external packages, opaque copying and writes, readable-storage fallback, conversion destination selection, malformed selectors, and validation before execution. See [dispatch measurements](extensions-performance.md) for timing and allocation.
 
 ## Limitations
 

@@ -1,10 +1,9 @@
 # Limitations
 
-Constructors, access, copying, broadcasting operations, reductions, softmax, RMSNorm, shape manipulation, real-float matrix multiplication and dtype conversion are implemented. The following areas remain open.
+Registered dtype/storage extensions, constructors, access, copying, broadcasting operations, reductions, softmax, RMSNorm, shape manipulation, real-float matrix multiplication and dtype conversion are implemented. The following areas remain open.
 
 | Area | Ticket |
 |---|---|
-| Dtype and storage extension protocol | [#23](https://todo.sr.ht/~takeiteasy/cl-tensor/23) |
 | Quantized dtypes, GGUF reader and model executor (planned `cl-inference` repo) | [#24](https://todo.sr.ht/~takeiteasy/cl-tensor/24) |
 | Kernel fusion | [#12](https://todo.sr.ht/~takeiteasy/cl-tensor/12) |
 | Parallel operations | [#13](https://todo.sr.ht/~takeiteasy/cl-tensor/13) |
@@ -16,6 +15,7 @@ Constructors, access, copying, broadcasting operations, reductions, softmax, RMS
 
 | Limitation | Ticket |
 |---|---|
+| Extension out-forms stage complete results; accessible custom storage packs complete inputs | [#32](https://todo.sr.ht/~takeiteasy/cl-tensor/32) |
 | Short elementwise calls pay fixed N-D layout setup overhead | [trivial-simd #152](https://todo.sr.ht/~takeiteasy/trivial-simd/152) |
 | Exact GEMM layout proofs can require substantial search time for difficult layouts | [trivial-simd #154](https://todo.sr.ht/~takeiteasy/trivial-simd/154) |
 | Irregular reductions pack input layouts; reduction out-forms use output scratch | [#27](https://todo.sr.ht/~takeiteasy/cl-tensor/27) |

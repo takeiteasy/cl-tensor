@@ -4,7 +4,7 @@ A tensor is typed storage plus a strided window onto it. Views share storage; co
 
 | Slot | Meaning |
 |---|---|
-| `storage` | Simple vector, or a trivial-simd `vector-view` |
+| `storage` | Storage protocol object; built-ins are simple vectors and trivial-simd `vector-view`s |
 | `dtype` | Element type keyword, see [dtypes and strides](dtypes-and-strides.md) |
 | `shape` | Size of each axis |
 | `strides` | Storage step per axis, in elements |
@@ -27,10 +27,12 @@ The element at indices `i0 … in` lives at `offset + Σ ik · stridek`.
 A view is valid when:
 
 - the strides match the rank, the offset is non-negative and every size is non-negative;
-- the dtype matches the storage element type;
+- the dtype validates storage compatibility and any layout restrictions;
 - every reachable storage index lies inside the storage. An empty view is always valid.
 
 ## Extension points
+
+Dtypes are registered CLOS descriptors. Storage kinds implement logical length, type and optional scalar access. Numerical operations select a dtype method before built-in execution; accepted extension out-forms stage independent results and copy through the dtype protocol. See [dtype and storage extensions](extensions.md).
 
 Autograd attaches through a wrapper around a tensor, or through a subtype defined with `(:include tensor)`. Code that accepts a `tensor` accepts both.
 

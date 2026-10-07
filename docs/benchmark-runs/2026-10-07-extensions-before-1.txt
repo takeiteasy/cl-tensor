@@ -1,0 +1,37 @@
+SBCL 2.6.8, Apple M1, serial fresh-process extension protocol comparison
+Baseline: c34b0ba; after: dtype/storage protocol working tree
+Tensor source: /private/tmp/cl-tensor-ticket23-baseline/
+SBCL 2.6.8, backend NATIVE
+1024 contiguous: 1.813 us/call, 1677.2 bytes/call
+1024 transpose: 3.199 us/call, 1739.4 bytes/call
+1024 stride2: 2.990 us/call, 1677.2 bytes/call
+1024 reverse: 3.117 us/call, 1706.7 bytes/call
+1024 broadcast: 2.139 us/call, 1739.4 bytes/call
+65536 contiguous: 10.063 us/call, 1654.3 bytes/call
+65536 transpose: 89.625 us/call, 1719.8 bytes/call
+65536 stride2: 84.001 us/call, 1654.3 bytes/call
+65536 reverse: 84.282 us/call, 1670.5 bytes/call
+65536 broadcast: 16.043 us/call, 1719.8 bytes/call
+Implementation Backend Dtype Layout us/call Lisp-bytes/call
+current LISP F32 MATRIX-3X2 3.565 2620.
+current LISP F32 MATRIX-9X8 7.499 7858.
+current LISP F32 INTERLEAVED-MATRICES 137.723 141313.
+current LISP F32 INTERLEAVED-BATCHES 106.111 106433.
+current LISP F32 CONTIGUOUS-CONTROL 32.413 2620.
+current LISP F64 MATRIX-3X2 3.573 2621.
+current LISP F64 MATRIX-9X8 7.518 7858.
+current LISP F64 INTERLEAVED-MATRICES 138.693 141318.
+current LISP F64 INTERLEAVED-BATCHES 104.938 106449.
+current LISP F64 CONTIGUOUS-CONTROL 31.533 2621.
+current NATIVE F32 MATRIX-3X2 3.615 2620.
+current NATIVE F32 MATRIX-9X8 7.279 7859.
+current NATIVE F32 INTERLEAVED-MATRICES 137.775 141315.
+current NATIVE F32 INTERLEAVED-BATCHES 101.215 106451.
+current NATIVE F32 CONTIGUOUS-CONTROL 25.042 2620.
+current NATIVE F64 MATRIX-3X2 3.695 2620.
+current NATIVE F64 MATRIX-9X8 7.299 7857.
+current NATIVE F64 INTERLEAVED-MATRICES 131.264 141316.
+current NATIVE F64 INTERLEAVED-BATCHES 98.896 106448.
+current NATIVE F64 CONTIGUOUS-CONTROL 23.056 2620.
+proof SMALL 0.971 us/call 0. Lisp-bytes/call
+proof LARGE 0.973 us/call 0. Lisp-bytes/call

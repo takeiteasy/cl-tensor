@@ -1,7 +1,14 @@
 (defpackage #:cl-tensor
   (:use #:cl)
   (:shadow #:abs #:sqrt #:min #:max #:concatenate #:log #:tanh)
-  (:export #:*dtypes*
+  (:export #:dtype #:dtype-name #:register-dtype #:find-dtype
+           #:dtype-block-size #:dtype-block-bytes #:dtype-zero
+           #:storage-length #:storage-element-type #:storage-readable-p #:storage-writable-p
+           #:storage-ref #:allocate-storage #:coerce-scalar #:validate-storage-view
+           #:copy-storage! #:copy-storage-supported-p #:resolve-operation
+           #:unsupported-operation #:unsupported-operation-name #:unsupported-operation-dtypes
+           #:unsupported-storage-access #:unsupported-access-storage #:unsupported-access-kind
+           #:dequantize #:*dtypes*
            #:dtype-element-type
            #:dtype-bytes
            #:dtype-storage-only-p

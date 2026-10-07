@@ -1,6 +1,8 @@
 # Dtype conversion
 
-`(astype tensor dtype &key (rounding :nearest-even))` returns an independent contiguous tensor with the same shape and converted values. Tensor operations reject mixed numeric dtypes; use this function to align them.
+`(astype tensor dtype &key (rounding :nearest-even))` returns an independent contiguous tensor with the same shape and converted values. Built-in tensor operations reject mixed numeric dtypes; use this function to align them.
+
+`(dequantize tensor &key (dtype :f32))` invokes an extension dequantization method or falls back to `astype`. Both functions dispatch through [dtype extension methods](extensions.md); custom conversions specify their accepted dtype combinations.
 
 ## Numeric conversion
 

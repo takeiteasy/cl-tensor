@@ -11,6 +11,9 @@ Reduce all axes or selected axes into an independent tensor. A matching `!` form
 
 Elementwise bounds use [`min` and `max`](elementwise.md).
 
+
+The dtype rules below describe built-in implementations. [Extension methods](extensions.md) retain the reduction shape rules and select their accepted dtypes and result dtype.
+
 ## Axes and shape
 
 All reducers accept `:axis` and `:keepdims`. `:axis nil` reduces every axis; an integer selects one axis, and a list or vector selects several. Negative axes count from the end. Duplicate and out-of-range axes signal errors. An empty vector selects no axes.

@@ -156,11 +156,8 @@
       (let ((out (make-tensor shape :dtype dtype)) (start 0))
         (dolist (x tensors out)
           (let ((offset (+ (tensor-offset out) (* start (aref (tensor-strides out) axis)))))
-            (call-with-offsets (tensor-shape x) (list (tensor-strides x) (tensor-strides out))
-                               (list (tensor-offset x) offset)
-                               (lambda (source target)
-                                 (setf (storage-ref (tensor-storage out) target)
-                                       (storage-ref (tensor-storage x) source)))))
+            (copy-storage! (find-dtype dtype)
+                           (layout-view out (tensor-shape x) (tensor-strides out) offset) x))
           (incf start (aref (tensor-shape x) axis)))))))
 
 (defun stack (tensors &key (axis 0))

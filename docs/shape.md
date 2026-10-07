@@ -15,6 +15,8 @@ Shape operations create views sharing storage. `concatenate` and `stack` allocat
 
 Negative axes count from the end. For `stack` and `expand-dims`, axes refer to the resulting rank. All operations preserve dtype, including raw `:f16` and `:bf16` storage.
 
+[Storage extensions](extensions.md) validate each resulting view and may reject unsupported layouts. Copying paths use the dtype copy method, allowing opaque storage when its layout supports the operation.
+
 ## Reshape and transpose
 
 A reshape shape contains non-negative dimensions and at most one inferred `-1`. Its element count must match the input. Inference with a zero known product is ambiguous and signals an error.

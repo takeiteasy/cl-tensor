@@ -10,7 +10,8 @@ Package `cl-tensor`, nickname it locally (`ct` below). Use qualified names: `abs
 | Softmax and weighted RMSNorm | [Normalization](normalization.md) |
 | Vector, matrix and batched multiplication | [Matrix multiplication](matmul.md) |
 | Views, reshape, slicing and joining | [Shape operations](shape.md) |
-| Explicit dtype changes and half-float encoding | [Conversion](conversion.md) |
+| Explicit dtype changes, half-float encoding and dequantization | [Conversion](conversion.md) |
+| External dtypes, storage and operation methods | [Extensions](extensions.md) |
 
 ## Construction
 
@@ -41,7 +42,9 @@ Package `cl-tensor`, nickname it locally (`ct` below). Use qualified names: `abs
 
 | Function | Returns |
 |---|---|
-| `*dtypes*` | Table of supported dtypes |
+| `*dtypes*` | Registered descriptors; enumerate without modifying |
+| `register-dtype`, `find-dtype` | Register and resolve dtype descriptors |
 | `(storage-dtype storage)` | Dtype inferred from storage |
-| `(dtype-element-type dtype)` `(dtype-bytes dtype)` | Lisp element type, size in bytes |
-| `(dtype-storage-only-p dtype)` | True for `:f16` and `:bf16` |
+| `(dtype-element-type dtype)` `(dtype-bytes dtype)` | Logical Lisp element type, bytes per logical element |
+| `(dtype-storage-only-p dtype)` | True for built-in `:f16`/`:bf16` and storage-only extensions |
+| `(dtype-block-size dtype)`, `(dtype-block-bytes dtype)` | Elements and stored bytes per block |

@@ -1,6 +1,6 @@
 # Dtypes and strides
 
-Dtypes are strict and strides are arbitrary.
+Dtypes are strict. Built-in storage supports arbitrary strides; extensions validate their own layout restrictions.
 
 ## Dtypes
 
@@ -12,7 +12,7 @@ Dtypes are strict and strides are arbitrary.
 | `:u8` `:u16` `:u32` `:u64` | `(unsigned-byte n)` | n/8 | yes |
 | `:f16` `:bf16` | `(unsigned-byte 16)` | 2 | storage only |
 
-- Mixed dtypes signal an error. Conversion is explicit, with `astype`.
+- Built-in computation rejects mixed dtypes. Conversion is explicit, with `astype`; extension methods declare the combinations they accept.
 - Scalars and constructor values are coerced to the tensor dtype. Integer dtypes require in-range integers; floats and ratios signal an error. Real dtypes reject complex values, and complex dtypes accept real values with a zero imaginary component.
 - Storage of `(unsigned-byte 16)` infers as `:u16`. Pass `:f16` or `:bf16` explicitly:
 
@@ -25,7 +25,7 @@ Dtypes are strict and strides are arbitrary.
 
 Integer arithmetic wraps at the dtype width; division truncates toward zero. [Conversion](conversion.md) rounds and clamps instead. `:f16` and `:bf16` access preserves raw bits; use `astype` to encode or decode numeric values.
 
-[Matrix multiplication](matmul.md) supports matching `:f32` or `:f64` operands.
+[Matrix multiplication](matmul.md) supports matching `:f32` or `:f64` operands through built-in kernels. Extension methods can accept mixed dtypes and select their result dtype. See [dtype and storage extensions](extensions.md).
 
 ## Strides
 
@@ -53,4 +53,4 @@ Strides count elements, not bytes, and may be negative or zero.
 
 Axes of size 1 ignore their stride.[^fast]
 
-[^fast]: Compatible contiguous tensors use one bulk call. Other layouts loop over outer axes and pass each inner row's offsets and strides to trivial-simd. Zero-stride inner inputs become scalar operands; operations that require a vector materialize a row. Upstream stages strided rows as needed. See [performance limitations](limitations.md#performance).
+[^fast]: Built-in elementwise operations pass storage, offsets and broadcast strides to one trivial-simd N-D call. Compatible contiguous axes coalesce into bulk runs; other layouts use native strided traversal or Lisp fallback. See [performance limitations](limitations.md#performance).

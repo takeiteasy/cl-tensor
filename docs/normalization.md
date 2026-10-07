@@ -1,6 +1,6 @@
 # Normalization
 
-`softmax` and `rmsnorm` normalize groups of `:f32` or `:f64` values without changing tensor shape or dtype. Allocating forms return independent contiguous storage; destination-first `!` forms return the supplied output.
+Built-in `softmax` and `rmsnorm` kernels normalize groups of `:f32` or `:f64` values without changing tensor shape or dtype. Allocating forms return independent contiguous storage; destination-first `!` forms return the supplied output.
 
 | Call | Group computation |
 |---|---|
@@ -18,6 +18,9 @@ Out-forms take the same keywords: `(softmax! out input ...)` and `(rmsnorm! out 
             :weights (ct:from-data '(1 2)) :epsilon 0)
 ;; approximately (0.84852815 2.2627418)
 ```
+
+
+[Extension methods](extensions.md) retain the normalization shape and axis rules and declare their accepted dtypes and result dtype.
 
 ## Axes
 

@@ -6,7 +6,7 @@
   :depends-on ("trivial-simd" "trivial-simd/blas" "cffi")
   :serial t
   :components ((:file "package") (:file "dtype") (:file "tensor")
-               (:file "access") (:file "constructors") (:file "elementwise")
+               (:file "access") (:file "dispatch") (:file "constructors") (:file "elementwise")
                (:file "shape") (:file "reductions") (:file "normalization") (:file "matmul"))
   :in-order-to ((asdf:test-op (asdf:test-op "cl-tensor/tests"))))
 
@@ -16,7 +16,7 @@
   :components ((:file "tests/package") (:file "tests/tensor")
                (:file "tests/constructors") (:file "tests/elementwise") (:file "tests/random")
                (:file "tests/shape") (:file "tests/reductions") (:file "tests/normalization")
-               (:file "tests/matmul"))
+               (:file "tests/matmul") (:file "examples/extensions") (:file "tests/extensions"))
   :perform (asdf:test-op (op component)
              (declare (ignore op component))
              (unless (uiop:symbol-call :cl-tensor/tests :run-tests)

@@ -50,9 +50,6 @@
 
 (defun make-tensor-view (storage shape &key (dtype (storage-dtype storage)) strides (offset 0))
   (check-shape shape)
-  (unless (dtype-matches-storage-p dtype storage)
-    (error "Storage of element type ~S cannot hold dtype ~S"
-           (storage-element-type storage) dtype))
   (let* ((shape (index-vector shape))
          (strides (if strides (index-vector strides) (row-major-strides shape))))
     (unless (= (length strides) (length shape))
@@ -64,14 +61,12 @@
         (unless (and (<= 0 low) (< high (storage-length storage)))
           (error "View reaches storage indices ~D to ~D, outside storage of length ~D"
                  low high (storage-length storage)))))
+    (validate-storage-view (find-dtype dtype) storage shape strides offset)
     (%make-tensor storage dtype shape strides offset)))
 
 (defun make-tensor (shape &key (dtype :f32))
   (check-shape shape)
-  (let ((storage (make-array (reduce #'* shape)
-                             :element-type (dtype-element-type dtype)
-                             :initial-element (dtype-zero dtype))))
-    (make-tensor-view storage shape :dtype dtype)))
+  (make-tensor-view (allocate-storage (find-dtype dtype) shape) shape :dtype dtype))
 
 (defun tensor-index (tensor indices)
   "Storage index of the element at INDICES, a list with one entry per axis."
