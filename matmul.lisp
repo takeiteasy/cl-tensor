@@ -73,26 +73,14 @@
       (values (or scratch (tensor-storage tensor)) increment
               (if scratch 0 (+ offset (if (minusp stride) (* (1- count) stride) 0)))))))
 
-(defun matmul-strides-unique-p (shape strides)
-  (let ((extent 0)
-        (axes (sort (loop for dimension in shape for stride in strides
-                          when (> dimension 1) collect (cons (cl:abs stride) dimension))
-                    #'< :key #'car)))
-    (loop for (stride . dimension) in axes
-          always (> stride extent)
-          do (incf extent (* stride (1- dimension))))))
-
 (defun matmul-gemm-adapter (tensor &optional output)
   (let* ((axis (- (tensor-rank tensor) 2))
          (rows (aref (tensor-shape tensor) axis))
          (cols (aref (tensor-shape tensor) (1+ axis)))
          (rs (if (= rows 1) 0 (aref (tensor-strides tensor) axis)))
          (cs (if (= cols 1) 0 (aref (tensor-strides tensor) (1+ axis))))
-         ;; TODO: sorted-stride proof rejects interleaving; adopt upstream proofs (#28).
          (scratch (when (or (not (typep rs 'trivial-simd/blas::blas-increment))
-                           (not (typep cs 'trivial-simd/blas::blas-increment))
-                           (and output
-                                (not (matmul-strides-unique-p (list rows cols) (list rs cs)))))
+                           (not (typep cs 'trivial-simd/blas::blas-increment)))
                     (make-array (* rows cols) :element-type (dtype-element-type (tensor-dtype tensor))
                                              :initial-element (dtype-zero (tensor-dtype tensor))))))
     (values
@@ -129,14 +117,8 @@
                  (one (coerce-value 1 (tensor-dtype a))) (zero (dtype-zero (tensor-dtype a)))
                  (gemm (if single #'trivial-simd/blas:sgemm #'trivial-simd/blas:dgemm))
                  (batched (if single #'trivial-simd/blas:sgemm-batch-strided
-                                     #'trivial-simd/blas:dgemm-batch-strided))
-                 (rank (- (tensor-rank out) 2)))
-            (when (or ascratch bscratch oscratch
-                      (not (matmul-strides-unique-p
-                            (list (aref (tensor-shape out) rank)
-                                  (aref (tensor-shape out) (1+ rank)) count)
-                            (list (aref (tensor-strides out) rank)
-                                  (aref (tensor-strides out) (1+ rank)) (third steps)))))
+                                     #'trivial-simd/blas:dgemm-batch-strided)))
+            (when (or ascratch bscratch oscratch)
               (setf prefix (length batch) count 1 steps '(0 0 0)))
             (call-with-offsets
              (subseq batch 0 prefix) (mapcar (lambda (layout) (subseq layout 0 prefix)) layouts) offsets

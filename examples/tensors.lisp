@@ -65,6 +65,13 @@
   (assert (= 3f0 (ct:tref out 1 0 0)))
   (format t "~&Reversed batch and matrix strides example passed.~%"))
 
+(let* ((storage (ct:tensor-storage (ct:full '(17) -1)))
+       (out (ct:make-tensor-view storage '(2 3 2) :strides '(8 2 3))))
+  (ct:matmul! out (ct:ones '(2 3 4)) (ct:ones '(4 2)))
+  (assert (= 4f0 (ct:tref out 1 2 1)))
+  (assert (= -1f0 (aref storage 1)))
+  (format t "~&Interleaved batched destination example passed.~%"))
+
 (let* ((input (ct:from-data '((1 2 3) (4 5 6))))
        (reversed (ct:slice input :selectors '(:all (nil nil -1))))
        (out (ct:transpose (ct:zeros '(3 2)))))

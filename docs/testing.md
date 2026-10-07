@@ -16,7 +16,7 @@ sbcl --non-interactive --eval '(require :asdf)' --eval '(asdf:test-system :cl-te
 | `tests/shape.lisp` | View sharing, reshape copying, slice bounds, joins/splits and seeded arbitrary layouts |
 | `tests/reductions.lisp` | All reducers, dtypes, axes, widening, empty groups, aliases, foreign storage and seeded enumeration |
 | `tests/normalization.lisp` | Softmax, weighted RMSNorm, axis sets, widened sums, empty inputs, arbitrary layouts, aliases and seeded scalar references |
-| `tests/matmul.lisp` | Vector/matrix and batch shapes, stride-aware storage sharing, batch dispatch counts, broadcast/reversed runs, scratch fallbacks, empty contractions, aliases, foreign storage and seeded reference products |
+| `tests/matmul.lisp` | Vector/matrix and batch shapes, direct interleaved destinations, storage sharing and guards, batch dispatch counts, broadcast/reversed runs, empty contractions, aliases, foreign storage and seeded reference products |
 | `tests/random.lisp` | Seeded random shapes, strides, broadcasting and output uniqueness checked against independent Lisp calculations[^seed] |
 
 ## Backends and examples
@@ -50,6 +50,14 @@ sbcl --non-interactive --load tests/normalization-bench.lisp
 ```
 
 See [normalization measurements](normalization-performance.md) for validation, path selection and retained results.
+
+Measure interleaved matrix and batch destinations, complete-call time and Lisp allocation:
+
+```sh
+sbcl --dynamic-space-size 4096 --non-interactive --load tests/matmul-bench.lisp
+```
+
+See [matmul measurements](matmul-performance.md) for layouts, baseline comparison and retained results.
 
 ## Limitations
 

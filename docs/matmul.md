@@ -43,13 +43,25 @@ An empty output performs no writes but still validates operands, shapes and dtyp
 
 Vectors use BLAS dot and matrix-vector routines; matrix products use stride-aware GEMM views over their backing storage. Transposed, reversed, padded and zero-stride input matrices work directly. Compatible batch axes combine into constant-stride runs, with one batched GEMM call per run; broadcast operands use a zero batch stride. A single product uses ordinary GEMM.[^backend]
 
-Matrix-vector products retain transpose flags and pack irregular matrices into reusable buffers. Zero-stride vectors materialize. Valid irregular destinations that fail upstream's uniqueness proof use reusable output scratch; batches that fail the combined proof dispatch individual products. See [limitations](#limitations).
+Interleaved destination matrices write directly to their backing storage. Compatible interleaved batches use batched GEMM; upstream checks addressed elements with exact arithmetic and bounded validation workspace.[^validation]
+
+```lisp
+(let* ((data (ct:tensor-storage (ct:zeros '(17))))
+       (out (ct:make-tensor-view data '(2 3 2) :strides '(8 2 3))))
+  (ct:matmul! out (ct:ones '(2 3 4)) (ct:ones '(4 2))))
+;; => OUT, every logical value is 4f0; unused storage stays zero
+```
+
+Matrix-vector products retain transpose flags and pack irregular matrices into reusable buffers. Zero-stride vectors materialize. Matrix strides outside GEMM kernel limits use reusable scratch and individual products.
 
 See [performance limitations](limitations.md#performance) for workspace costs shared with other operations.
 
+See [matmul measurements](matmul-performance.md) for interleaved destinations and complete-call benchmarks.
+
 ## Limitations
 
-- Interleaved destination layouts may require output scratch or individual products because upstream uses a conservative uniqueness proof. Stronger validation is tracked in [#28](https://todo.sr.ht/~takeiteasy/cl-tensor/28).
+- General destination validation can use workspace proportional to element count, and input snapshots can include disjoint interleaved views. See [performance limitations](limitations.md#performance).
 
-[^output]: Every overlapping input is snapshotted before any batch writes. Destinations proven unique by upstream receive direct writes; other valid matrix layouts use one reusable matrix buffer before scattering. Ordinary validation precedes writes; computation errors may leave part of the destination updated.
+[^output]: Every potentially overlapping input is snapshotted before any batch writes. Ordinary validation precedes writes; computation errors may leave part of the destination updated.
+[^validation]: Upstream checks matrix and constant-stride batch uniqueness and input/output overlap without enumerating addresses into a table. Difficult layouts can require substantial search time. cl-tensor separately validates the complete N-D destination before dispatch.
 [^backend]: Floating-point order and exceptional values follow trivial-simd and the active Lisp floating-point environment; final bits may differ between backends. BLAS kernel dimensions, leading dimensions and vector increments are bounded by 1,073,741,823, and accessed storage offsets by 2⁶⁰−1. Irrelevant singleton-axis strides are ignored. GEMM uses signed row/column strides; input strides outside kernel limits pack into reusable scratch. Batch runs split at the upstream count limit. Native batching requires the upstream batch symbols; older native libraries fall back to per-product dispatch.
