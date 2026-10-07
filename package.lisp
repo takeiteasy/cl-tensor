@@ -1,6 +1,6 @@
 (defpackage #:cl-tensor
   (:use #:cl)
-  (:shadow #:abs #:sqrt #:min #:max #:concatenate)
+  (:shadow #:abs #:sqrt #:min #:max #:concatenate #:log #:tanh)
   (:export #:*dtypes*
            #:dtype-element-type
            #:dtype-bytes
@@ -28,6 +28,7 @@
            #:sum #:sum! #:mean #:mean! #:minimum #:minimum! #:maximum #:maximum!
            #:argmin #:argmin! #:argmax #:argmax! #:prod #:prod!
            #:add #:add! #:subtract #:subtract! #:multiply #:multiply! #:divide #:divide!
+           #:log #:log! #:tanh #:tanh! #:sigmoid #:sigmoid!
            #:negate #:negate! #:abs #:abs! #:sqrt #:sqrt! #:reciprocal #:reciprocal!
            #:min #:min! #:max #:max! #:clamp #:clamp!
            #:compare #:compare! #:select #:select!))

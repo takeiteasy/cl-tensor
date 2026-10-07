@@ -69,6 +69,8 @@
   (ecase operation
     (:add #'trivial-simd:nd-add!) (:subtract #'trivial-simd:nd-subtract!)
     (:multiply #'trivial-simd:nd-multiply!) (:divide #'trivial-simd:nd-divide!)
+    (:log #'trivial-simd:nd-log!) (:tanh #'trivial-simd:nd-tanh!)
+    (:sigmoid #'trivial-simd:nd-sigmoid!)
     (:negate #'trivial-simd:nd-negate!) (:abs #'trivial-simd:nd-abs!)
     (:sqrt #'trivial-simd:nd-sqrt!) (:reciprocal #'trivial-simd:nd-reciprocal!)
     (:min #'trivial-simd:nd-min!) (:max #'trivial-simd:nd-max!)
@@ -79,7 +81,7 @@
   (ecase operation
     ((:add :subtract :multiply :divide :min :max :compare)
      '((:left-start :left-strides) (:right-start :right-strides)))
-    ((:negate :abs :sqrt :reciprocal :astype) '((:input-start :input-strides)))
+    ((:log :tanh :sigmoid :negate :abs :sqrt :reciprocal :astype) '((:input-start :input-strides)))
     (:clamp '((:input-start :input-strides) (:lower-start :lower-strides) (:upper-start :upper-strides)))
     (:select '((:mask-start :mask-strides) (:true-start :true-strides) (:false-start :false-strides)))))
 
@@ -104,6 +106,9 @@
 
 (defun check-operation (operation dtype operator)
   (computational-dtype dtype)
+  (when (and (member operation '(:log :tanh :sigmoid))
+             (not (member dtype '(:f32 :f64))))
+    (error "~S requires a real floating-point dtype" operation))
   (when (and (member operation '(:sqrt :reciprocal))
              (not (member dtype '(:f32 :f64 :c32 :c64))))
     (error "~S requires a floating-point dtype" operation))
@@ -197,3 +202,7 @@
       (error "Encoded conversion requires real floats or encoded storage")))
   (run-nd :astype (make-tensor (tensor-shape tensor) :dtype dtype)
             (list tensor) :rounding rounding))
+
+(define-elementwise log :log (input))
+(define-elementwise tanh :tanh (input))
+(define-elementwise sigmoid :sigmoid (input))

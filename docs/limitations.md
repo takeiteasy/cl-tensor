@@ -28,6 +28,5 @@ Constructors, access, copying, broadcasting operations, reductions, shape manipu
 | Missing upstream | cl-tensor ticket | trivial-simd ticket |
 |---|---|---|
 | Broader GEMM overlap and destination-layout proofs | [#28](https://todo.sr.ht/~takeiteasy/cl-tensor/28) | [#149](https://todo.sr.ht/~takeiteasy/trivial-simd/149) |
-| `log`, `tanh` and sigmoid kernel operators | [#20](https://todo.sr.ht/~takeiteasy/cl-tensor/20) | [#147](https://todo.sr.ht/~takeiteasy/trivial-simd/147) |
 
 The umbrella ticket is [#9](https://todo.sr.ht/~takeiteasy/cl-tensor/9).

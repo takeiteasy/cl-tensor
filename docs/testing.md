@@ -12,7 +12,7 @@ sbcl --non-interactive --eval '(require :asdf)' --eval '(asdf:test-system :cl-te
 |---|---|
 | `tests/tensor.lisp` | Dtype inference, construction, view validation, indexing |
 | `tests/constructors.lisp` | Filled tensors, nested data, sequences, identity matrices, access, copying and foreign storage |
-| `tests/elementwise.lisp` | Arithmetic, masks, conversion, dtype errors, strided output, aliases across axes, and one N-D dispatch per operation |
+| `tests/elementwise.lisp` | Arithmetic, real-float activations, masks, conversion, dtype errors, strided output, aliases across axes, and one N-D dispatch per operation |
 | `tests/shape.lisp` | View sharing, reshape copying, slice bounds, joins/splits and seeded arbitrary layouts |
 | `tests/reductions.lisp` | All reducers, dtypes, axes, widening, empty groups, aliases, foreign storage and seeded enumeration |
 | `tests/matmul.lisp` | Vector/matrix and batch shapes, stride-aware storage sharing, batch dispatch counts, broadcast/reversed runs, scratch fallbacks, empty contractions, aliases, foreign storage and seeded reference products |
@@ -28,7 +28,7 @@ sbcl --non-interactive --eval '(require :asdf)' \
   --eval '(let ((trivial-simd::*backend* :lisp)) (asdf:test-system :cl-tensor))'
 ```
 
-Run the constructor, broadcasting, shape, reduction and matmul examples:
+Run the constructor, broadcasting, activation, shape, reduction and matmul examples:
 
 ```sh
 sbcl --non-interactive --load examples/tensors.lisp

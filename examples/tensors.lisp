@@ -72,3 +72,15 @@
   (assert (= 13f0 (ct:tref out 0 0)))
   (assert (= 24f0 (ct:tref out 1 2)))
   (format t "~&N-D broadcasting into a transposed destination passed.~%"))
+
+(let* ((x (ct:from-data '(-2 -1 0 1 2)))
+       (sigmoid (ct:sigmoid x))
+       (silu (ct:multiply x sigmoid))
+       (cube (ct:multiply x (ct:multiply x x)))
+       (gelu (ct:multiply (ct:multiply x 0.5)
+                         (ct:add 1 (ct:tanh (ct:multiply 0.7978845608028654
+                                                       (ct:add x (ct:multiply 0.044715 cube))))))))
+  (assert (= 0.5 (ct:tref sigmoid 2)))
+  (assert (= 0 (ct:tref silu 2)))
+  (assert (= 0 (ct:tref gelu 2)))
+  (assert (= 0 (ct:tref (ct:log (ct:ones '(1))) 0))))
