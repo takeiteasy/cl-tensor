@@ -42,6 +42,12 @@ Reductions group retained and reduced axes into rows, packing when inner rows ar
 
 See [reductions](reductions.md) and [shape operations](shape.md) for their interfaces.
 
+## Normalization
+
+Softmax and RMSNorm group selected axes into contiguous inner rows using the reduction layout helpers. Typed single- and double-float loops compute into independent storage; optional widened accumulation affects sums. RMSNorm applies broadcast weights to that storage before any destination write. Results restore the input axis order, and out-forms copy into validated strided destinations.
+
+See [normalization](normalization.md) for formulas, axes and precision, and [measurements](normalization-performance.md) for execution comparisons.
+
 ## Matrix multiplication
 
 Matmul broadcasts batch axes and promotes vectors into matrix axes. Matrix products wrap existing storage with independent signed row/column strides and combine compatible batch axes into constant-stride GEMM runs. Vector products use dot/GEMV and retain packing for irregular matrix layouts. Overlapping inputs are snapshotted before batch writes. Destinations proven unique by upstream receive direct writes; other valid matrix layouts scatter from reusable scratch.

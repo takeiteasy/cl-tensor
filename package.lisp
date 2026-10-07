@@ -25,6 +25,7 @@
            #:tref #:copy-tensor #:astype
            #:reshape #:transpose #:slice #:squeeze #:expand-dims #:concatenate #:stack #:split
            #:matmul #:matmul!
+           #:softmax #:softmax! #:rmsnorm #:rmsnorm!
            #:sum #:sum! #:mean #:mean! #:minimum #:minimum! #:maximum #:maximum!
            #:argmin #:argmin! #:argmax #:argmax! #:prod #:prod!
            #:add #:add! #:subtract #:subtract! #:multiply #:multiply! #:divide #:divide!
