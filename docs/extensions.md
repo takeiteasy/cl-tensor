@@ -117,7 +117,7 @@ See [dispatch measurements](extensions-performance.md) for built-in storage and 
 ## Limitations
 
 - Staged executors and elementwise fallback retain O(output elements) scratch. Reduction, normalization, matmul and conversion fallback pack complete custom-storage inputs: [#33](https://todo.sr.ht/~takeiteasy/cl-tensor/33).
-- Production quantized formats and model integration belong to the inference project: [#24](https://todo.sr.ht/~takeiteasy/cl-tensor/24).
+- Production weight formats and model integration belong to the inference project: [cl-inference #1](https://todo.sr.ht/~takeiteasy/cl-inference/1).
 
 [^registry]: Descriptor replacement requires a fresh Lisp image. Reloading methods on an existing descriptor class is supported; duplicate registration does not replace its metadata. Concurrent registry mutation is outside the protocol.
 [^staging]: Executor failures leave a supplied destination unchanged. A failing final copy method can partially update it; extensions validate their copy prerequisites before writing.

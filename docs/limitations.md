@@ -4,7 +4,7 @@ Registered dtype/storage extensions, constructors, access, copying, broadcasting
 
 | Area | Ticket |
 |---|---|
-| Quantized dtypes, GGUF reader and model executor (planned `cl-inference` repo) | [#24](https://todo.sr.ht/~takeiteasy/cl-tensor/24) |
+| Inference architectures and production weight formats in `cl-inference` | [cl-inference #1](https://todo.sr.ht/~takeiteasy/cl-inference/1) |
 | Kernel fusion | [#12](https://todo.sr.ht/~takeiteasy/cl-tensor/12) |
 | Parallel operations | [#13](https://todo.sr.ht/~takeiteasy/cl-tensor/13) |
 | Autograd | [#14](https://todo.sr.ht/~takeiteasy/cl-tensor/14) |
