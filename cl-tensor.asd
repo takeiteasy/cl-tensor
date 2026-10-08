@@ -1,7 +1,7 @@
 (asdf:defsystem "cl-tensor"
   :description "NumPy-like N-dimensional tensors for Common Lisp, built on trivial-simd"
   :author "George Watson"
-  :license "MIT"
+  :license "GPL-3.0-or-later"
   :version "0.0.0"
   :depends-on ("trivial-simd" "trivial-simd/blas" "cffi")
   :serial t
