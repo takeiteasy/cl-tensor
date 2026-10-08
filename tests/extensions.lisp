@@ -317,6 +317,48 @@
   (when (= (incf (reads storage)) (fail-at storage)) (error "Injected read failure"))
   (call-next-method))
 
+(test take-custom-storage-and-hidden-aliases
+  (let* ((input (wrapped '(1f0 2f0 3f0 4f0) '(2 2)))
+         (out (ct:make-tensor-view (make-instance 'wrapped-storage
+                                                :data (wrapped-data (ct:tensor-storage input)))
+                                  '(2 2)))
+         (indices (ct:from-data '(1 0) :dtype :s64)))
+    (is (equalp '(3f0 4f0 1f0 2f0) (values-of (ct:take input indices))))
+    (is (eq out (ct:take! out input indices)))
+    (is (equalp '(3f0 4f0 1f0 2f0) (values-of out)))
+    (signals ct:unsupported-storage-access
+      (ct:take! (wrapped '(9f0 9f0 9f0 9f0) '(2 2) :writable nil) input indices)))
+  (let* ((storage (make-instance 'failing-storage
+                                 :data (make-array 4 :element-type 'single-float
+                                                    :initial-contents '(1f0 2f0 3f0 4f0))
+                                 :fail-at 3))
+         (input (ct:make-tensor-view storage '(2 2)))
+         (out (wrapped '(9f0 9f0 9f0 9f0) '(2 2))))
+    (signals error (ct:take! out input (ct:from-data '(0 1) :dtype :s64)))
+    (is (= 3 (reads storage)))
+    (is (equalp '(9f0 9f0 9f0 9f0) (values-of out)))))
+
+(test take-opaque-packed-storage
+  (let* ((input (example:make-packed '(3 2) '(1 2 3 4 5 6) 2f0))
+         (indices (ct:from-data '((2 0) (1 2)) :dtype :s64))
+         (result (ct:take input indices))
+         (out (example:make-packed '(2 2 2) '(0 0 0 0 0 0 0 0))))
+    (is (eq :example-packed8 (ct:tensor-dtype result)))
+    (is (equalp #(2 2 2) (ct:tensor-shape result)))
+    (is (equalp '(10f0 12f0 2f0 4f0 6f0 8f0 10f0 12f0)
+                (values-of (example:decode result))))
+    (is (eq out (ct:take! out input indices)))
+    (is (equalp (values-of (example:decode result)) (values-of (example:decode out))))
+    (signals error (ct:take! out input (ct:from-data '((2 0) (1 3)) :dtype :s64)))
+    (is (equalp (values-of (example:decode result)) (values-of (example:decode out))))
+    (signals error (ct:take input (ct:from-data '(0 1) :dtype :s64) :axis 1)))
+  (let* ((input (example:make-packed '(2 2) '(1 2 3 4)))
+         (out (example:make-packed '(2 2) '(0 0 0 0))))
+    (ct:take! out input (ct:from-data '(1 0) :dtype :s64))
+    (is (equalp '(3f0 4f0 1f0 2f0) (values-of (example:decode out))))
+    (ct:take! input input (ct:from-data '(1 0) :dtype :s64))
+    (is (equalp '(3f0 4f0 1f0 2f0) (values-of (example:decode input))))))
+
 (test bounded-elementwise-workspace-and-layouts
   (dolist (size '(0 1 4095 4096 4097 8193))
     (let* ((a (wrapped (make-list size :initial-element 3f0) (list size)))

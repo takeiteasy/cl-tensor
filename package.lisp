@@ -31,6 +31,7 @@
            #:zeros #:ones #:full #:from-data #:arange #:linspace #:eye
            #:tref #:copy-tensor #:astype
            #:reshape #:transpose #:slice #:squeeze #:expand-dims #:concatenate #:stack #:split
+           #:take #:take!
            #:matmul #:matmul!
            #:softmax #:softmax! #:rmsnorm #:rmsnorm!
            #:sum #:sum! #:mean #:mean! #:minimum #:minimum! #:maximum #:maximum!

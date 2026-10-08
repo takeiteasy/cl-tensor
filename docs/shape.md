@@ -1,6 +1,6 @@
 # Shape operations
 
-Shape operations create views sharing storage. `concatenate` and `stack` allocate independent contiguous results; `reshape` copies only when its copy policy requires it.
+Shape operations create views sharing storage. `concatenate`, `stack` and `take` allocate independent contiguous results; `reshape` copies only when its copy policy requires it.
 
 | Call | Behavior |
 |---|---|
@@ -12,6 +12,8 @@ Shape operations create views sharing storage. `concatenate` and `stack` allocat
 | `(concatenate tensors &key (axis 0))` | Join along an existing axis |
 | `(stack tensors &key (axis 0))` | Join along a new axis |
 | `(split input sections-or-cuts &key (axis 0))` | Return a list of views along an existing axis |
+| `(take input indices &key (axis 0))` | Gather slices into a new tensor |
+| `(take! out input indices &key (axis 0))` | Gather slices and return the supplied destination |
 
 Negative axes count from the end. For `stack` and `expand-dims`, axes refer to the resulting rank. All operations preserve dtype, including raw `:f16` and `:bf16` storage.
 
@@ -35,6 +37,27 @@ Compatible padded, stepped, reversed and zero-stride layouts can reshape without
   (ct:reshape b '(6)))
 ;; values: 0, 3, 1, 4, 2, 5; independent storage
 ```
+
+## Gather
+
+`take` replaces the selected axis with the shape of `indices`. Input rank must be positive. Indices are tensors of any rank with a signed or unsigned integer dtype (`:s8` through `:s64`, or `:u8` through `:u64`). Scalar indices remove the selected axis; repeated indices repeat slices. Negative indices count from the end. Values outside the axis bounds signal an error, including when another dimension is empty. An empty index tensor selects no slices.
+
+| Input shape | Index shape | Axis | Result shape |
+|---|---|---|---|
+| `(vocabulary features)` | `(tokens)` | `0` | `(tokens features)` |
+| `(vocabulary features)` | `(batch tokens)` | `0` | `(batch tokens features)` |
+| `(rows columns)` | `()` | `1` | `(rows)` |
+
+```lisp
+(let* ((embeddings (ct:from-data '((1 2) (3 4) (5 6))))
+       (ids (ct:from-data '((2 0) (1 -1)) :dtype :s64)))
+  (ct:take embeddings ids))
+;; shape: (2 2 2); values: 5, 6, 1, 2, 3, 4, 5, 6
+```
+
+Input and index tensors support padded, reversed and zero-stride views, including foreign storage. Gathering preserves the input dtype and copies raw `:f16`/`:bf16` bits. Custom storage uses its dtype's view validation and copy methods; packed formats may reject slices that break their block layout.
+
+`take!` requires the exact result shape and input dtype, nonoverlapping logical destination elements, and dtype copy support. It validates every index and gathers into independent storage before copying to `out`, preserving input/index aliases and leaving the destination unchanged on gathering failures.[^gather-copy]
 
 ## Slicing
 
@@ -72,6 +95,9 @@ Split accepts a positive section count dividing the axis evenly, or ordered cut 
 
 ## Limitations
 
-- Slicing supports basic integer and range selectors. Boolean masks, advanced array indexing, ellipsis and insertion selectors are outside this API.
+- Slicing supports basic integer and range selectors. Use `take` for axis-based integer gathers. Boolean masks, general advanced indexing, ellipsis and insertion selectors are outside this API.
+- Gather out-forms use full-result scratch; see [performance limitations](limitations.md#performance).
 
 [^strides]: Reshape groups compatible stride chunks, ignoring singleton-axis strides. A new dimension cannot cross a discontinuity between chunks. Views retain their storage owner; callers keep foreign memory valid for the view's lifetime.
+
+[^gather-copy]: A custom dtype's final destination copy retains its own failure contract. Result staging and normalized-index storage require O(result size + index count) workspace; no upstream gather kernel is required.

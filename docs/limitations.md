@@ -15,6 +15,7 @@ Registered dtype/storage extensions, constructors, access, copying, broadcasting
 
 | Limitation | Ticket |
 |---|---|
+| Gather out-forms retain full-result scratch | [#39](https://todo.sr.ht/~takeiteasy/cl-tensor/39) |
 | Staged extension execution retains full-result scratch; non-elementwise accessible-storage fallback packs complete inputs | [#33](https://todo.sr.ht/~takeiteasy/cl-tensor/33) |
 | Short elementwise calls pay fixed N-D layout setup overhead | [trivial-simd #152](https://todo.sr.ht/~takeiteasy/trivial-simd/152) |
 | Exact GEMM layout proofs can require substantial search time for difficult layouts | [trivial-simd #154](https://todo.sr.ht/~takeiteasy/trivial-simd/154) |

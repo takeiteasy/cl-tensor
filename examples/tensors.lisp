@@ -7,6 +7,14 @@
 
 (in-package #:cl-tensor/examples)
 
+(let* ((embeddings (ct:from-data '((1 2) (3 4) (5 6))))
+       (ids (ct:from-data '((2 0) (1 -1)) :dtype :s64))
+       (out (ct:zeros '(2 2 2))))
+  (assert (equalp #(2 2 2) (ct:tensor-shape (ct:take embeddings ids))))
+  (assert (eq out (ct:take! out embeddings ids)))
+  (assert (= 5f0 (ct:tref out 1 1 0)))
+  (format t "~&Batched embedding lookup passed.~%"))
+
 (let ((sequence (ct:arange 5 0 -2 :dtype :s8))
       (samples (ct:linspace 0 1 :num 3))
       (identity (ct:eye 2 :columns 3 :k 1)))

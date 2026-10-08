@@ -9,7 +9,7 @@ Package `cl-tensor`, nickname it locally (`ct` below). Use qualified names: `abs
 | Axis reductions and logical arg indices | [Reductions](reductions.md) |
 | Softmax and weighted RMSNorm | [Normalization](normalization.md) |
 | Vector, matrix and batched multiplication | [Matrix multiplication](matmul.md) |
-| Views, reshape, slicing and joining | [Shape operations](shape.md) |
+| Views, reshape, slicing, gathering and joining | [Shape operations](shape.md) |
 | Explicit dtype changes, half-float encoding and dequantization | [Conversion](conversion.md) |
 | External dtypes, storage and operation methods | [Extensions](extensions.md) |
 

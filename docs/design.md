@@ -38,7 +38,7 @@ Autograd attaches through a wrapper around a tensor, or through a subtype define
 
 ## Shape and reduction execution
 
-Shape operations build validated views; reshape copies when its strides cannot represent the requested logical order. Concatenate and stack allocate independent storage.
+Shape operations build validated views; reshape copies when its strides cannot represent the requested logical order. Concatenate, stack and take allocate independent storage. Gather copies selected slices through the dtype copy protocol; its out-form stages the result before writing the destination.
 
 Reductions group retained and reduced axes into rows, packing when inner rows are not contiguous. Compatible real float batches execute natively; integer and complex batches use upstream typed reducers. Destination-writing reductions compute before scattering, so overlapping views read their original values.
 

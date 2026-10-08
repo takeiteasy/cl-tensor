@@ -13,11 +13,11 @@ sbcl --non-interactive --eval '(require :asdf)' --eval '(asdf:test-system :cl-te
 | `tests/tensor.lisp` | Dtype inference, construction, view validation, indexing |
 | `tests/constructors.lisp` | Filled tensors, nested data, sequences, identity matrices, access, copying and foreign storage |
 | `tests/elementwise.lisp` | Arithmetic, exp/sin/cos, SiLU and tanh-GELU against scalar and composed references, masks, conversion, dtype errors, broadcast/strided views, aliases across axes, and one N-D dispatch per operation |
-| `tests/shape.lisp` | View sharing, reshape copying, slice bounds, joins/splits and seeded arbitrary layouts |
+| `tests/shape.lisp` | View sharing, reshape copying, slice bounds, joins/splits, gather shapes/dtypes/bounds, strided and foreign aliases, and seeded coordinate references |
 | `tests/reductions.lisp` | All reducers, dtypes, axes, widening, empty groups, aliases, foreign storage and seeded enumeration |
 | `tests/normalization.lisp` | Softmax, weighted RMSNorm, axis sets, widened sums, empty inputs, arbitrary layouts, aliases and seeded scalar references |
 | `tests/matmul.lisp` | Vector/matrix and batch shapes, direct interleaved destinations, storage sharing and guards, batch dispatch counts, broadcast/reversed runs, empty contractions, aliases, foreign storage and seeded reference products |
-| `tests/extensions.lisp` | External CLOS descriptors, operation tables, opaque blocks, mixed matmul, conversion, bounded fallback buffers, safe direct selectors, validation, aliases and failure atomicity |
+| `tests/extensions.lisp` | External CLOS descriptors, operation tables, opaque blocks, packed gather, mixed matmul, conversion, bounded fallback buffers, safe direct selectors, validation, hidden aliases and failure atomicity |
 | `tests/random.lisp` | Seeded random shapes, strides, broadcasting and output uniqueness checked against independent Lisp calculations[^seed] |
 
 ## Backends and examples
@@ -30,7 +30,7 @@ sbcl --non-interactive --eval '(require :asdf)' \
   --eval '(let ((trivial-simd::*backend* :lisp)) (asdf:test-system :cl-tensor))'
 ```
 
-Run the constructor, broadcasting, activation, normalization, shape, reduction and matmul examples:
+Run the constructor, broadcasting, activation, normalization, shape, embedding lookup, reduction and matmul examples:
 
 ```sh
 sbcl --non-interactive --load examples/tensors.lisp
@@ -87,9 +87,9 @@ SBCL 2.6.8 and ECL execute the full suite and the tensor, extension and upstream
 
 | Implementation/backend | Passing checks |
 |---|---:|
-| SBCL default/native | 47,723 |
-| SBCL Lisp | 47,723 |
-| ECL | 48,488 |
+| SBCL default/native | 48,201 |
+| SBCL Lisp | 48,201 |
+| ECL | 47,303 |
 | Experimental ARM64 CCL (2026-10-07 run) | 31,358; direct selectors are untested, subject to the [CCL limitation](#limitations) |
 
 The extension checks cover public-interface-only external packages, opaque copying and writes, conversion destination selection, bounded elementwise buffers, malformed direct selectors, hidden aliases, validation before execution, and unchanged destinations on executor or late input-read failures. SBCL also injects a second-chunk kernel failure.[^injection] See [dispatch measurements](extensions-performance.md) and [staging measurements](extensions-staging-performance.md) for timing and allocation.
@@ -97,6 +97,8 @@ The extension checks cover public-interface-only external packages, opaque copyi
 Elementwise math checks cover exp/sin/cos and SiLU/tanh-GELU in both precisions,
 including scalar and composed references, broadcast/reversed layouts, foreign
 aliases, custom storage and one upstream N-D dispatch per operation.
+
+Gather checks cover scalar and batched token indices, negative and out-of-range indices, all built-in dtypes, raw encoded-float bits, signed and zero strides, foreign aliases, packed copies, hidden custom-storage aliases and unchanged destinations on gather failures.
 
 ## Limitations
 
