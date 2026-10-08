@@ -1,5 +1,6 @@
 (require :asdf)
-(asdf:load-system :cl-tensor)
+(unless (asdf:component-loaded-p :cl-tensor)
+  (asdf:load-system :cl-tensor))
 
 (defpackage #:cl-tensor/extension-example
   (:use #:cl)

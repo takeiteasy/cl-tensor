@@ -43,6 +43,12 @@ Run the external dtype/storage example:
 (cl-tensor/extension-example:run-example)
 ```
 
+Check normal and forced ASDF test loading for recursive-operation warnings in a fresh process:
+
+```sh
+sbcl --non-interactive --load tests/asdf-loading.lisp
+```
+
 See [extensions](extensions.md) for its public protocol, [dispatch measurements](extensions-performance.md) for built-in regression controls, and [staging measurements](extensions-staging-performance.md) for direct execution and custom-storage packing.
 
 Measure elementwise time and, on SBCL, allocation:
@@ -94,7 +100,6 @@ aliases, custom storage and one upstream N-D dispatch per operation.
 
 ## Limitations
 
-- The extension example loaded as a test component recursively calls ASDF and emits a deprecation warning on SBCL: [#38](https://todo.sr.ht/~takeiteasy/cl-tensor/38). The tests still execute.
 - The experimental ARM64 CCL `1.13 (v1.13-459-g690ff7ea)` build can crash or end compiled normalization reference checks prematurely while reporting success. Its green summary does not establish complete normalization coverage: [#31](https://todo.sr.ht/~takeiteasy/cl-tensor/31). SBCL native/Lisp and ECL execute the full checks.
 
 [^seed]: SBCL runs use a fixed seed, so failures reproduce. Other Lisps seed from the clock.
