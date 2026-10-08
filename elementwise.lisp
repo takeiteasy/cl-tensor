@@ -71,6 +71,9 @@
     (:multiply #'trivial-simd:nd-multiply!) (:divide #'trivial-simd:nd-divide!)
     (:log #'trivial-simd:nd-log!) (:tanh #'trivial-simd:nd-tanh!)
     (:sigmoid #'trivial-simd:nd-sigmoid!)
+    (:exp #'trivial-simd:nd-exp!) (:sin #'trivial-simd:nd-sin!)
+    (:cos #'trivial-simd:nd-cos!) (:silu #'trivial-simd:nd-silu!)
+    (:gelu #'trivial-simd:nd-gelu!)
     (:negate #'trivial-simd:nd-negate!) (:abs #'trivial-simd:nd-abs!)
     (:sqrt #'trivial-simd:nd-sqrt!) (:reciprocal #'trivial-simd:nd-reciprocal!)
     (:min #'trivial-simd:nd-min!) (:max #'trivial-simd:nd-max!)
@@ -81,7 +84,8 @@
   (ecase operation
     ((:add :subtract :multiply :divide :min :max :compare)
      '((:left-start :left-strides) (:right-start :right-strides)))
-    ((:log :tanh :sigmoid :negate :abs :sqrt :reciprocal :astype) '((:input-start :input-strides)))
+    ((:log :tanh :sigmoid :exp :sin :cos :silu :gelu :negate :abs :sqrt :reciprocal :astype)
+     '((:input-start :input-strides)))
     (:clamp '((:input-start :input-strides) (:lower-start :lower-strides) (:upper-start :upper-strides)))
     (:select '((:mask-start :mask-strides) (:true-start :true-strides) (:false-start :false-strides)))))
 
@@ -106,7 +110,7 @@
 
 (defun check-operation (operation dtype operator)
   (computational-dtype dtype)
-  (when (and (member operation '(:log :tanh :sigmoid))
+  (when (and (member operation '(:log :tanh :sigmoid :exp :sin :cos :silu :gelu))
              (not (member dtype '(:f32 :f64))))
     (error "~S requires a real floating-point dtype" operation))
   (when (and (member operation '(:sqrt :reciprocal))
@@ -275,6 +279,11 @@
 (define-elementwise log :log (input))
 (define-elementwise tanh :tanh (input))
 (define-elementwise sigmoid :sigmoid (input))
+(define-elementwise exp :exp (input))
+(define-elementwise sin :sin (input))
+(define-elementwise cos :cos (input))
+(define-elementwise silu :silu (input))
+(define-elementwise gelu :gelu (input))
 
 (defun astype (tensor dtype &key (rounding :nearest-even))
   (check-type tensor tensor)

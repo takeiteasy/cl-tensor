@@ -1,6 +1,6 @@
 (defpackage #:cl-tensor
   (:use #:cl)
-  (:shadow #:abs #:sqrt #:min #:max #:concatenate #:log #:tanh)
+  (:shadow #:abs #:sqrt #:min #:max #:concatenate #:log #:tanh #:exp #:sin #:cos)
   (:export #:dtype #:dtype-name #:register-dtype #:find-dtype
            #:dtype-block-size #:dtype-block-bytes #:dtype-zero
            #:storage-length #:storage-element-type #:storage-readable-p #:storage-writable-p
@@ -37,6 +37,7 @@
            #:argmin #:argmin! #:argmax #:argmax! #:prod #:prod!
            #:add #:add! #:subtract #:subtract! #:multiply #:multiply! #:divide #:divide!
            #:log #:log! #:tanh #:tanh! #:sigmoid #:sigmoid!
+           #:exp #:exp! #:sin #:sin! #:cos #:cos! #:silu #:silu! #:gelu #:gelu!
            #:negate #:negate! #:abs #:abs! #:sqrt #:sqrt! #:reciprocal #:reciprocal!
            #:min #:min! #:max #:max! #:clamp #:clamp!
            #:compare #:compare! #:select #:select!))

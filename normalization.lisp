@@ -28,7 +28,7 @@
                              (let ((maximum (trivial-simd:maximum input :input-start input-start :end width)))
                                (declare (type ,type maximum))
                                (dotimes (i width)
-                                 (let ((value (exp (- (read-input (+ input-start i)) maximum))))
+                                 (let ((value (cl:exp (- (read-input (+ input-start i)) maximum))))
                                    (setf (aref destination (+ destination-start i)) value)
                                    (incf total (coerce value ',sum-type))))
                                (let ((inverse (coerce (/ ,(coerce 1 sum-type) total) ',type)))

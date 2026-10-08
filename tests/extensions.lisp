@@ -123,7 +123,7 @@
       (let ((function (symbol-function (find-symbol (string operation) :cl-tensor))))
         (is (equalp (values-of (funcall function (ordinary a) (ordinary a)))
                     (values-of (funcall function a a))))))
-    (dolist (operation '(:negate :abs :sqrt :reciprocal :log :tanh :sigmoid))
+    (dolist (operation '(:negate :abs :sqrt :reciprocal :log :tanh :sigmoid :exp :sin :cos :silu :gelu))
       (let ((function (symbol-function (find-symbol (string operation) :cl-tensor))))
         (is (equalp (values-of (funcall function (ordinary a))) (values-of (funcall function a))))))
     (ct:clamp a 1 3)
@@ -140,7 +140,7 @@
     (ct:astype a :f32)
     (ct:dequantize a)
     (dolist (operation '(:add :subtract :multiply :divide :min :max :negate :abs :sqrt
-                         :reciprocal :log :tanh :sigmoid :clamp :compare :select :sum :mean
+                         :reciprocal :log :tanh :sigmoid :exp :sin :cos :silu :gelu :clamp :compare :select :sum :mean
                          :prod :minimum :maximum :argmin :argmax :softmax :rmsnorm :matmul
                          :dot :convert :dequantize))
       (is (not (null (member operation *selections*)))))))
@@ -351,12 +351,38 @@
     (dolist (operation '(:add :subtract :multiply :divide :min :max))
       (let ((function (symbol-function (find-symbol (string operation) :cl-tensor))))
         (is (equalp (values-of (funcall function ordinary 2)) (values-of (funcall function a 2))))))
-    (dolist (operation '(:negate :abs :sqrt :reciprocal :log :tanh :sigmoid))
+    (dolist (operation '(:negate :abs :sqrt :reciprocal :log :tanh :sigmoid :exp :sin :cos :silu :gelu))
       (let ((function (symbol-function (find-symbol (string operation) :cl-tensor))))
         (is (equalp (values-of (funcall function ordinary)) (values-of (funcall function a))))))
     (is (equalp '(1 1 0 0) (values-of mask)))
     (is (equalp '(1f0 2f0 9f0 9f0) (values-of (ct:select mask a 9))))
     (is (equalp '(2f0 2f0 3f0 3f0) (values-of (ct:clamp a 2 3))))))
+
+(test inference-math-extension-out-forms
+  (dolist (operation '(:exp :sin :cos :silu :gelu))
+    (let* ((allocate (symbol-function (find-symbol (string operation) :cl-tensor)))
+           (write (symbol-function (find-symbol (format nil "~A!" operation) :cl-tensor)))
+           (input (wrapped '(-2f0 -1f0 0f0 1f0 2f0 3f0) '(2 3)))
+           (out (wrapped '(0f0 0f0 0f0 0f0 0f0 0f0) '(2 3)))
+           (expected (values-of (funcall allocate (ct:from-data '((-2 -1 0) (1 2 3)))))))
+      (is (eq out (funcall write out input)))
+      (is (equalp expected (values-of out)))
+      (is (eq input (funcall write input input)))
+      (is (equalp expected (values-of input))))
+    (let* ((input (ct:from-data '(-2 -1 0 1 2 3) :dtype :example-hooked))
+           (out (ct:zeros '(6)))
+           (allocate (symbol-function (find-symbol (string operation) :cl-tensor)))
+           (write (symbol-function (find-symbol (format nil "~A!" operation) :cl-tensor))))
+      (is (eq out (funcall write out input)))
+      (is (equalp (values-of (funcall allocate input)) (values-of out))))
+    (let* ((storage (make-instance 'failing-storage
+                                   :data (make-array 8193 :element-type 'single-float :initial-element 1f0)
+                                   :fail-at 5000))
+           (input (ct:make-tensor-view storage '(8193)))
+           (out (ct:full '(8193) 7))
+           (write (symbol-function (find-symbol (format nil "~A!" operation) :cl-tensor))))
+      (signals error (funcall write out input))
+      (is (every (lambda (x) (= 7 x)) (values-of out))))))
 
 (test bounded-fallback-validation-and-failure-atomicity
   (let* ((storage (make-instance 'failing-storage :data (make-array 8193 :element-type 'single-float

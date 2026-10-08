@@ -12,7 +12,7 @@ sbcl --non-interactive --eval '(require :asdf)' --eval '(asdf:test-system :cl-te
 |---|---|
 | `tests/tensor.lisp` | Dtype inference, construction, view validation, indexing |
 | `tests/constructors.lisp` | Filled tensors, nested data, sequences, identity matrices, access, copying and foreign storage |
-| `tests/elementwise.lisp` | Arithmetic, real-float activations, masks, conversion, dtype errors, strided output, aliases across axes, and one N-D dispatch per operation |
+| `tests/elementwise.lisp` | Arithmetic, exp/sin/cos, SiLU and tanh-GELU against scalar and composed references, masks, conversion, dtype errors, broadcast/strided views, aliases across axes, and one N-D dispatch per operation |
 | `tests/shape.lisp` | View sharing, reshape copying, slice bounds, joins/splits and seeded arbitrary layouts |
 | `tests/reductions.lisp` | All reducers, dtypes, axes, widening, empty groups, aliases, foreign storage and seeded enumeration |
 | `tests/normalization.lisp` | Softmax, weighted RMSNorm, axis sets, widened sums, empty inputs, arbitrary layouts, aliases and seeded scalar references |
@@ -75,21 +75,26 @@ Measure custom-storage fallback and opaque executor staging:
 sbcl --non-interactive --load tests/extensions-bench.lisp
 ```
 
-## Extension protocol validation
+## Validation
 
-SBCL 2.6.8 and ECL execute the full suite and the constructor and extension examples. Recorded run, 2026-10-07:
+SBCL 2.6.8 and ECL execute the full suite and the tensor, extension and upstream N-D examples. Recorded run, 2026-10-08:
 
 | Implementation/backend | Passing checks |
 |---|---:|
-| SBCL default/native | 47,019 |
-| SBCL Lisp | 46,989 |
-| ECL | 47,282 |
-| Experimental ARM64 CCL | 31,358; direct selectors are untested, subject to the [CCL limitation](#limitations) |
+| SBCL default/native | 47,723 |
+| SBCL Lisp | 47,723 |
+| ECL | 48,488 |
+| Experimental ARM64 CCL (2026-10-07 run) | 31,358; direct selectors are untested, subject to the [CCL limitation](#limitations) |
 
 The extension checks cover public-interface-only external packages, opaque copying and writes, conversion destination selection, bounded elementwise buffers, malformed direct selectors, hidden aliases, validation before execution, and unchanged destinations on executor or late input-read failures. SBCL also injects a second-chunk kernel failure.[^injection] See [dispatch measurements](extensions-performance.md) and [staging measurements](extensions-staging-performance.md) for timing and allocation.
 
+Elementwise math checks cover exp/sin/cos and SiLU/tanh-GELU in both precisions,
+including scalar and composed references, broadcast/reversed layouts, foreign
+aliases, custom storage and one upstream N-D dispatch per operation.
+
 ## Limitations
 
+- The extension example loaded as a test component recursively calls ASDF and emits a deprecation warning on SBCL: [#38](https://todo.sr.ht/~takeiteasy/cl-tensor/38). The tests still execute.
 - The experimental ARM64 CCL `1.13 (v1.13-459-g690ff7ea)` build can crash or end compiled normalization reference checks prematurely while reporting success. Its green summary does not establish complete normalization coverage: [#31](https://todo.sr.ht/~takeiteasy/cl-tensor/31). SBCL native/Lisp and ECL execute the full checks.
 
 [^seed]: SBCL runs use a fixed seed, so failures reproduce. Other Lisps seed from the clock.
