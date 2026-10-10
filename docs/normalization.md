@@ -19,7 +19,6 @@ Out-forms take the same keywords: `(softmax! out input ...)` and `(rmsnorm! out 
 ;; approximately (0.84852815 2.2627418)
 ```
 
-
 [Extension methods](extensions.md) retain the normalization shape and axis rules and declare their accepted dtypes and result dtype.
 
 ## Axes
@@ -58,8 +57,8 @@ Maximum subtraction avoids exponential overflow for ordinary finite softmax inpu
 
 ## Limitations
 
-- Normalization uses full-result scratch, and portable f64 weight/output stages allocate per element: [#30](https://todo.sr.ht/~takeiteasy/cl-tensor/30).
-- Irregular groups use the reduction packing helper: [#27](https://todo.sr.ht/~takeiteasy/cl-tensor/27).
+- Normalization uses full-result scratch, and portable f64 weight/output stages allocate per element: [#8](https://github.com/communal-software/cl-tensor/issues/8).
+- Irregular groups use the reduction packing helper: [#7](https://github.com/communal-software/cl-tensor/issues/7).
 
 [^precision]: F32 widened softmax sums the stored single-float exponentials in double precision, then rounds the reciprocal to single precision. Widened RMSNorm sums single-float squares in double precision, then rounds the mean before adding epsilon. Widening sums does not prevent single-float square overflow.
 [^execution]: Reduction helpers reuse compatible inner rows and pack irregular layouts. Typed loops handle Lisp vectors and foreign views directly. Normalized values occupy independent storage; weights are applied there, then a same-dtype N-D conversion copies into the destination. See [execution measurements](normalization-performance.md).

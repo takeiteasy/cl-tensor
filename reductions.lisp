@@ -40,7 +40,7 @@
          (width (reduce #'* axes :key (lambda (a) (aref shape a)) :initial-value 1)))
     (values (index-vector result-shape) width kept)))
 
-;; TODO: O(input size) packing; use bounded staging or native stride descriptors (#27).
+;; TODO: O(input size) packing; use bounded staging or native stride descriptors (https://github.com/communal-software/cl-tensor/issues/7).
 (defun reduction-rows (tensor axes kept width rows)
   (let* ((order (append kept axes))
          (grouped (transpose tensor :axes order))
@@ -67,7 +67,7 @@
         (when (zerop rows) (return-from builtin-tensor-reduction result))
         (let* ((input-dtype (if (member operation '(:argmin :argmax)) (tensor-dtype tensor) dtype))
                (input (if (eq input-dtype (tensor-dtype tensor)) tensor (astype tensor input-dtype)))
-               ;; TODO: O(output size) scratch; write proven-disjoint outputs directly (#27).
+               ;; TODO: O(output size) scratch; write proven-disjoint outputs directly (https://github.com/communal-software/cl-tensor/issues/7).
                (values (if out
                            (make-array rows :element-type (dtype-element-type dtype)
                                             :initial-element (dtype-zero dtype))

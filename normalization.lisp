@@ -88,7 +88,7 @@
       (let* ((rows (reduce #'* shape))
              (order (append kept axes))
              (matrix (reduction-rows input axes kept width rows))
-             ;; TODO: O(input size) scratch; use bounded rows for proven-disjoint outputs (#30).
+             ;; TODO: O(input size) scratch; use bounded rows for proven-disjoint outputs (https://github.com/communal-software/cl-tensor/issues/8).
              (scratch (make-tensor (list rows width) :dtype dtype))
              (runner (normalization-row-function dtype accumulate)))
         (dotimes (row rows)
@@ -98,7 +98,7 @@
         (let* ((grouped (reshape scratch (tensor-shape (transpose input :axes order))))
                (inverse (loop for a below rank collect (position a order)))
                (normalized (transpose grouped :axes inverse)))
-          ;; TODO: Lisp f64 weight/copy stages box per element; use typed traversal (#30).
+          ;; TODO: Lisp f64 weight/copy stages box per element; use typed traversal (https://github.com/communal-software/cl-tensor/issues/8).
           (when weights (multiply! normalized normalized weights))
           (cond (out (run-nd :astype out (list normalized) :rounding :nearest-even))
                 ((contiguous-p normalized) (reshape normalized (tensor-shape input)))

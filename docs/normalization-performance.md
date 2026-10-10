@@ -65,8 +65,8 @@ Selection uses each workload's median latency across the three processes. A kern
 ## Limitations
 
 - Measurements describe this M1 and these workloads, not other platforms or whole-model inference.
-- Normalization uses O(input elements) result scratch. Portable f64 weight/output stages allocate per element, foreign extrema use portable staging, and restoring original axis order can require another tensor: [#30](https://todo.sr.ht/~takeiteasy/cl-tensor/30).
-- Irregular groups use the existing reduction packing helper: [#27](https://todo.sr.ht/~takeiteasy/cl-tensor/27).
-- Native dependent-pass kernels pay per-row/pass setup costs: [trivial-simd #137](https://todo.sr.ht/~takeiteasy/trivial-simd/137).
+- Normalization uses O(input elements) result scratch. Portable f64 weight/output stages allocate per element, foreign extrema use portable staging, and restoring original axis order can require another tensor: [#8](https://github.com/communal-software/cl-tensor/issues/8).
+- Irregular groups use the existing reduction packing helper: [#7](https://github.com/communal-software/cl-tensor/issues/7).
+- Native dependent-pass kernels pay per-row/pass setup costs: trivial-simd #137.
 
 [^measurement]: The script temporarily replaces the private row dispatcher inside the benchmark process and restores it after each case, including on errors. `CT_NORMALIZATION_CHECK_ONLY=1` loads candidates without running timings. SBCL's allocation counter has sampling granularity and excludes native allocations. Both candidates retain their ordinary scalar system math and backend-dependent exceptional-value behavior.

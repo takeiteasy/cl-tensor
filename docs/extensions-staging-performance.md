@@ -60,7 +60,7 @@ Each retained trial runs the extension harness followed by the existing elementw
 
 ## Limitations
 
-- Staged extension calls and elementwise fallback retain full-result scratch; reductions, normalization, matmul and conversion fallback pack complete custom-storage inputs: [#33](https://todo.sr.ht/~takeiteasy/cl-tensor/33).
+- Staged extension calls and elementwise fallback retain full-result scratch; reductions, normalization, matmul and conversion fallback pack complete custom-storage inputs: [#10](https://github.com/communal-software/cl-tensor/issues/10).
 - Measurements cover f32 scalar-access storage and the opaque demonstration format. They do not establish workspace or timing guarantees for third-party executors.
 
 [^local]: Local measurements describe this machine and workload, not cross-platform performance guarantees. Direct execution depends on the extension's declared alias and failure guarantees.

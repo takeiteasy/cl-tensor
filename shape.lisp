@@ -245,6 +245,6 @@
   (check-type out tensor)
   (multiple-value-bind (axis shape normalized) (prepare-take input indices axis)
     (check-copy-destination out shape (tensor-dtype input))
-    ;; TODO: full-result scratch; gather directly into proven-disjoint storage (#39).
+    ;; TODO: full-result scratch; gather directly into proven-disjoint storage (https://github.com/communal-software/cl-tensor/issues/11).
     (copy-storage! (find-dtype (tensor-dtype input)) out
                    (gather-slices input indices axis shape normalized))))

@@ -11,7 +11,6 @@ Reduce all axes or selected axes into an independent tensor. A matching `!` form
 
 Elementwise bounds use [`min` and `max`](elementwise.md).
 
-
 The dtype rules below describe built-in implementations. [Extension methods](extensions.md) retain the reduction shape rules and select their accepted dtypes and result dtype.
 
 ## Axes and shape
@@ -50,7 +49,7 @@ Floating-point order and exceptional values follow trivial-simd and the active L
 
 ## Limitations
 
-- Irregular reductions can require O(input elements) packing, and out-forms use O(output elements) scratch: [#27](https://todo.sr.ht/~takeiteasy/cl-tensor/27).
-- Native integer and complex row batching remains upstream work: [trivial-simd #148](https://todo.sr.ht/~takeiteasy/trivial-simd/148).
+- Irregular reductions can require O(input elements) packing, and out-forms use O(output elements) scratch: [#7](https://github.com/communal-software/cl-tensor/issues/7).
+- Native integer and complex row batching remains upstream work: trivial-simd #148.
 
 [^scratch]: Whole contiguous reductions use upstream vector reducers. Compatible layouts use contiguous inner-row batches; other layouts pack logical rows. Out-forms compute into temporary storage and scatter only after reduction succeeds.

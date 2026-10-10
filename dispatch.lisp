@@ -66,7 +66,7 @@
               (error 'unsupported-storage-access :storage (tensor-storage tensor) :access :read)))
           (when storage-fallback
             (return-from dispatch-operation (funcall storage-fallback operation out inputs options)))
-          ;; TODO: O(input size) packing; add operation-specific bounded adapters (#33).
+          ;; TODO: O(input size) packing; add operation-specific bounded adapters (https://github.com/communal-software/cl-tensor/issues/10).
           (let* ((target (when out (make-tensor (tensor-shape out) :dtype (tensor-dtype out))))
                  (result (funcall fallback target (mapcar #'pack-backend-input inputs))))
             (if out (copy-storage! (find-dtype (tensor-dtype out)) out result) result))))))

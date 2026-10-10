@@ -2,7 +2,6 @@
 
 Operations broadcast trailing axes and return independent contiguous tensors. A matching `!` form writes into a supplied output and returns it, for example `(add a b)` and `(add! out a b)`.
 
-
 The dtype rules below describe built-in implementations. [Extension methods](extensions.md) select accepted dtype combinations and result dtypes before built-in execution.
 
 ## Operations

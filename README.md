@@ -3,7 +3,7 @@
 > **Work in progress.** This project is under development; expect missing features and breaking changes.
 
 NumPy-like N-dimensional tensors for Common Lisp, built on
-[trivial-simd](https://git.sr.ht/~takeiteasy/trivial-simd) and `trivial-simd/blas`.
+[trivial-simd](https://github.com/communal-software/trivial-simd) and `trivial-simd/blas`.
 
 ```lisp
 (ql:quickload :cl-tensor)
@@ -29,7 +29,7 @@ Construct, index and copy strided tensors; reshape and slice views; broadcast ar
 - [Testing](docs/testing.md)
 - [Limitations](docs/limitations.md)
 
-Work is tracked at <https://todo.sr.ht/~takeiteasy/cl-tensor>.
+Work is tracked at <https://github.com/communal-software/cl-tensor/issues>.
 
 ## License
 

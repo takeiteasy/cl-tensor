@@ -102,7 +102,7 @@ Gather checks cover scalar and batched token indices, negative and out-of-range 
 
 ## Limitations
 
-- The experimental ARM64 CCL `1.13 (v1.13-459-g690ff7ea)` build can crash or end compiled normalization reference checks prematurely while reporting success. Its green summary does not establish complete normalization coverage: [#31](https://todo.sr.ht/~takeiteasy/cl-tensor/31). SBCL native/Lisp and ECL execute the full checks.
+- The experimental ARM64 CCL `1.13 (v1.13-459-g690ff7ea)` build can crash or end compiled normalization reference checks prematurely while reporting success. Its green summary does not establish complete normalization coverage: [#9](https://github.com/communal-software/cl-tensor/issues/9). SBCL native/Lisp and ECL execute the full checks.
 
 [^seed]: SBCL runs use a fixed seed, so failures reproduce. Other Lisps seed from the clock.
 [^backend]: The backend binding is an upstream test hook, not a cl-tensor public API. Use `:native` only when the native library is available; ARM64 does not provide the `:sbcl` SIMD backend.

@@ -30,6 +30,6 @@ CT_ELEMENTWISE_BASELINE=/tmp/cl-tensor-elementwise-comparison.lisp \
 
 ## Limitations
 
-Small-call layout setup remains a tuning opportunity: [trivial-simd #152](https://todo.sr.ht/~takeiteasy/trivial-simd/152).
+Small-call layout setup remains a tuning opportunity: trivial-simd #152.
 
 [^measurement]: Timings are wall-clock averages after 20 warm-up calls: 20,000 iterations at 1,024 elements and 4,000 at 65,536. A full GC precedes each SBCL measurement; bytes/call excludes data construction. Timing and allocation counter granularity cause small variation between cases. Results describe this machine and workload, rather than a cross-platform speed guarantee.

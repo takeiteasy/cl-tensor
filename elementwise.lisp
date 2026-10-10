@@ -33,7 +33,7 @@
                 always (> stride extent)
                 do (incf extent (* stride (1- dimension))))
       (return-from unique-output-p t)))
-  ;; TODO: O(size) workspace for irregular layouts; add arithmetic proofs (#25).
+  ;; TODO: O(size) workspace for irregular layouts; add arithmetic proofs (https://github.com/communal-software/cl-tensor/issues/5).
   (let ((seen (make-hash-table :test #'eql)))
     (call-with-offsets (tensor-shape tensor) (list (tensor-strides tensor))
                        (list (tensor-offset tensor))
@@ -56,7 +56,7 @@
   (when (or (zerop (tensor-size a)) (zerop (tensor-size b)))
     (return-from overlapping-p nil))
   (let ((sa (tensor-storage a)) (sb (tensor-storage b)))
-    ;; TODO: mixed storage always snapshots; prove disjointness with pinned addresses (#26).
+    ;; TODO: mixed storage always snapshots; prove disjointness with pinned addresses (https://github.com/communal-software/cl-tensor/issues/6).
     (when (not (eq (trivial-simd:vector-view-p sa) (trivial-simd:vector-view-p sb)))
       (return-from overlapping-p t))
     (when (or (eq sa sb)
@@ -165,7 +165,7 @@
   (let ((dtype (getf options :dtype)) (operator (getf options :operator)))
     (multiple-value-bind (shape result-dtype inputs)
         (prepare-elementwise operation out operands dtype operator)
-      ;; TODO: O(output size) staging; use transactional storage for bounded commits (#33).
+      ;; TODO: O(output size) staging; use transactional storage for bounded commits (https://github.com/communal-software/cl-tensor/issues/10).
       (let* ((result (make-tensor shape :dtype result-dtype))
              (size (tensor-size result))
              (capacity (cl:min size +elementwise-pack-size+))
